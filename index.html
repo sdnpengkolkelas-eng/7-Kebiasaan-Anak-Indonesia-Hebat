@@ -2,237 +2,1286 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jurnal 7 Kebiasaan</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pahlawan Cilik - SD Negeri Pengkol</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
+/* PAHLAWAN CILIK DESIGN SYSTEM (CREAM & LAVENDER) */
+:root {
+  --bg-dark: #0f172a;
+  --bg-card: #1e293b;
+  --primary-gold: #fbbf24;
+  --primary-purple: #818cf8;
+  --primary-purple-hover: #6366f1;
+  --accent-cyan: #38bdf8;
+  --accent-green: #34d399;
+  --accent-red: #f87171;
+  --text-dark: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-card: 1px solid rgba(255,255,255,0.05);
+  --font-game: 'Nunito', sans-serif;
+  --font-title: 'Quicksand', sans-serif;
+}
+
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:#f0f4ff;color:#1a1a2e;min-height:100vh;-webkit-tap-highlight-color:transparent}
+body{
+  font-family: var(--font-game);
+  background: var(--bg-dark);
+  color: var(--text-dark);
+  min-height: 100vh;
+  -webkit-tap-highlight-color: transparent;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  position: relative;
+}
+
+/* Soft Dark Background Illusion */
+body::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    radial-gradient(circle at 80% 20%, rgba(129, 140, 248, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 10% 80%, rgba(56, 189, 248, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 100%, rgba(52, 211, 153, 0.05) 0%, transparent 60%);
+  z-index: 0;
+  pointer-events: none;
+}
+body::after {
+  display: none;
+}
+
+/* PORTRAIT MOBILE CONTAINER */
+#app-container {
+  width: 100%;
+  max-width: 480px;
+  height: 100vh;
+  overflow: hidden;
+  background: transparent;
+  border-left: 1px solid rgba(255,255,255,0.02);
+  border-right: 1px solid rgba(255,255,255,0.02);
+  position: relative;
+  box-shadow: 0 0 40px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+}
+
 .hidden{display:none!important}
-.page{display:none}
-.page.active{display:block}
-#page-login{min-height:100vh;background:linear-gradient(135deg,#0d2c6e 0%,#1565C0 60%,#1976D2 100%);display:none;align-items:center;justify-content:center;padding:16px}
-#page-login.active{display:flex!important}
-#page-journal{display:none}
-#page-journal.active{display:block!important}
-#page-teacher{display:none;min-height:100vh;background:#f0f4ff}
-#page-teacher.active{display:block!important}
-.login-card{background:#fff;border-radius:16px;padding:28px 24px;width:100%;max-width:380px;box-shadow:0 12px 40px rgba(0,0,0,.2);text-align:center}
-.login-logo{width:64px;height:64px;background:linear-gradient(135deg,#1565C0,#42A5F5);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 6px 20px rgba(21,101,192,0.3)}
-.login-logo svg{color:#fff;width:34px;height:34px}
-.login-title{font-size:1.3rem;font-weight:800;color:#1565C0;margin-bottom:4px}
-.login-sub{font-size:.82rem;color:#666;margin-bottom:20px}
-.form-group{margin-bottom:14px;text-align:left}
-.form-group label{display:block;font-size:.78rem;font-weight:600;color:#444;margin-bottom:5px}
-.form-group select,.form-group input{width:100%;padding:11px 12px;border:1.5px solid #dde3f0;border-radius:10px;font-size:.9rem;font-family:'Inter',sans-serif;outline:none;transition:border-color .2s}
-.form-group select:focus,.form-group input:focus{border-color:#1565C0}
-.btn-primary{width:100%;padding:12px;background:linear-gradient(135deg,#1565C0,#1976D2);color:#fff;border:none;border-radius:10px;font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .2s;margin-top:4px}
-.btn-primary:hover{opacity:.9}
-.btn-primary:active{transform:scale(.98)}
-.link-small{display:block;margin-top:16px;font-size:.78rem;color:#888}
-.link-small button{background:none;border:none;color:#1565C0;font-weight:600;cursor:pointer;font-size:.78rem;text-decoration:underline;font-family:'Inter',sans-serif;padding:0}
-.link-small button:active{opacity:.7}
+.page{display:none;flex: 1; overflow: hidden; flex-direction: column;}
+.page.active{display:flex!important;}
+
+/* ROUNDED PURPLE BUTTONS */
+.btn-game {
+  font-family: var(--font-title);
+  font-weight: 700;
+  border-radius: 9999px; /* Pill shape */
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  user-select: none;
+  letter-spacing: 0.5px;
+  padding: 14px 24px;
+  background: var(--primary-purple);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(123, 97, 255, 0.25);
+}
+.btn-game:hover {
+  background: var(--primary-purple-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(123, 97, 255, 0.35);
+}
+.btn-game:active {
+  transform: translateY(1px);
+}
+/* Re-map colors to purple to keep theme consistent, except red for logout/delete */
+.btn-game-gold, .btn-game-cyan, .btn-game-green {
+  background: var(--primary-purple);
+  box-shadow: 0 4px 12px rgba(123, 97, 255, 0.25);
+}
+.btn-game-gold:hover, .btn-game-cyan:hover, .btn-game-green:hover {
+  background: var(--primary-purple-hover);
+}
+.btn-game-red {
+  background: var(--accent-red);
+  box-shadow: 0 4px 12px rgba(255, 82, 82, 0.25);
+}
+.btn-game-red:hover {
+  background: #e04040;
+  box-shadow: 0 6px 16px rgba(255, 82, 82, 0.35);
+}
+.btn-game:disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* OPENING GAME SCREEN */
+#page-opening {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 24px;
+}
+#page-opening.active {
+  display: flex !important;
+}
+.opening-content {
+  text-align: center;
+  width: 100%;
+  max-width: 380px;
+  position: relative;
+  z-index: 2;
+  background: var(--bg-card);
+  padding: 40px 24px;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  backdrop-filter: blur(12px);
+  border: var(--border-card);
+}
+.opening-logo {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 24px;
+  background: rgba(56, 189, 248, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(56, 189, 248, 0.2);
+  border: 2px solid rgba(56, 189, 248, 0.2);
+}
+.opening-logo i {
+  color: var(--accent-cyan);
+}
+.opening-title {
+  font-family: var(--font-title);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+.opening-subtitle {
+  font-size: 0.95rem;
+  color: var(--accent-cyan);
+  font-weight: 700;
+  margin-bottom: 30px;
+}
+.opening-progress-wrap {
+  margin-bottom: 24px;
+}
+.opening-progress {
+  width: 100%;
+  height: 12px;
+  background: rgba(129, 140, 248, 0.2);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+}
+.opening-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #a8c0ff, #7b61ff);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+.opening-status {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 12px;
+  font-weight: 600;
+}
+.btn-start-game {
+  width: 100%;
+  font-size: 1.1rem;
+}
+
+/* LOGIN SCREEN */
+#page-login {
+  min-height: 100vh;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+.login-card {
+  background: var(--bg-card);
+  border-radius: 24px;
+  padding: 40px 28px;
+  width: 100%;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+  border: var(--border-card);
+  text-align: center;
+  position: relative;
+}
+.login-logo {
+  width: 80px;
+  height: 80px;
+  background: rgba(129, 140, 248, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  border: 2px solid rgba(129, 140, 248, 0.2);
+  box-shadow: 0 8px 24px rgba(129, 140, 248, 0.2);
+}
+.login-title {
+  font-family: var(--font-title);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+}
+.login-sub {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: 32px;
+  font-weight: 700;
+}
+.form-group {
+  margin-bottom: 24px;
+  text-align: left;
+}
+.form-group label {
+  display: block;
+  font-family: var(--font-title);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 10px;
+}
+.form-group select, .form-group input {
+  width: 100%;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  font-size: 1rem;
+  font-family: var(--font-game);
+  outline: none;
+  background: rgba(0,0,0,0.2);
+  color: var(--text-dark);
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+.form-group select option {
+  background: var(--bg-card);
+  color: var(--text-dark);
+}
+.form-group select:focus, .form-group input:focus {
+  border-color: var(--primary-purple);
+  background: rgba(0,0,0,0.3);
+}
+.btn-login-submit {
+  width: 100%;
+  margin-top: 16px;
+  padding: 16px;
+  font-size: 1.1rem;
+}
+.link-small {
+  margin-top: 28px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.link-small button {
+  background: none;
+  border: none;
+  color: var(--primary-purple);
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: none;
+  font-family: var(--font-title);
+  margin-left: 4px;
+}
+.link-small button:hover {
+  text-decoration: underline;
+}
 
 /* TOPBAR */
-.topbar{background:#fff;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(21,101,192,.08);position:sticky;top:0;z-index:100}
-.topbar-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#1565C0,#42A5F5);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.9rem;flex-shrink:0}
-.topbar-info{flex:1;min-width:0}
-.topbar-name{font-weight:700;font-size:.88rem;color:#1a1a2e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.topbar-class{font-size:.72rem;color:#888}
-.btn-logout{padding:6px 12px;background:#fff;border:1.5px solid #e0e0e0;border-radius:8px;font-size:.75rem;font-weight:600;color:#666;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:4px;flex-shrink:0}
-.btn-logout:active{background:#f5f5f5}
+.topbar {
+  background: rgba(30, 41, 59, 0.85);
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: var(--border-card);
+  position: relative;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+.topbar-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--primary-purple);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-title);
+  font-weight: 800;
+  font-size: 1rem;
+  box-shadow: 0 4px 10px rgba(123, 97, 255, 0.2);
+}
+.topbar-info {
+  flex: 1;
+  min-width: 0;
+}
+.topbar-name {
+  font-family: var(--font-title);
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.topbar-class {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.btn-logout {
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  background: transparent;
+  color: var(--accent-red);
+  border: none;
+  box-shadow: none;
+}
+.btn-logout:hover {
+  background: rgba(255, 82, 82, 0.1);
+}
 
-/* HERO CARD */
-.hero-card{background:linear-gradient(135deg,#1565C0,#1976D2,#42A5F5);margin:12px 12px 10px;border-radius:16px;padding:20px 18px;color:#fff;box-shadow:0 6px 24px rgba(21,101,192,.3);position:relative;overflow:hidden}
-.hero-card::before{content:'';position:absolute;top:-50%;right:-20%;width:200px;height:200px;background:rgba(255,255,255,.1);border-radius:50%;z-index:0}
-.hero-card::after{content:'';position:absolute;bottom:-30%;left:-10%;width:150px;height:150px;background:rgba(255,255,255,.08);border-radius:50%;z-index:0}
-.hero-inner{position:relative;z-index:1}
-.hero-date{font-size:.75rem;opacity:.9;margin-bottom:10px;display:flex;align-items:center;gap:5px}
-.hero-date::before{content:'📅';font-size:.9rem}
-.hero-score-section{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.hero-score-left{flex:1}
-.hero-label{font-size:.7rem;opacity:.8;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
-.hero-pts{font-size:2.8rem;font-weight:800;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,.1)}
-.hero-max{font-size:.85rem;opacity:.8;margin-top:3px}
-.hero-grade{font-size:1.8rem;font-weight:800;background:rgba(255,255,255,.25);padding:8px 16px;border-radius:12px;backdrop-filter:blur(10px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
-.hero-prog-bg{background:rgba(255,255,255,.25);border-radius:8px;height:8px;margin-top:4px;overflow:hidden}
-.hero-prog-fill{background:#fff;border-radius:8px;height:8px;transition:width .6s cubic-bezier(.4,0,.2,1);max-width:100%;box-shadow:0 2px 8px rgba(255,255,255,.3)}
+/* CHARACTER STATUS / HERO CARD */
+.hero-card {
+  background: var(--bg-card);
+  margin: 12px 16px 8px;
+  border-radius: 20px;
+  padding: 16px;
+  border: var(--border-card);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
+}
+.hero-date {
+  font-family: var(--font-title);
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  font-weight: 800;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hero-score-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.hero-score-left {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.hero-score-left::before, .hero-score-left::after {
+  content: '⚡';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1.2rem;
+  opacity: 0.2;
+}
+.hero-score-left::before { left: -24px; }
+.hero-score-left::after { right: -24px; }
+.hero-label {
+  font-family: var(--font-title);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  text-align: center;
+}
+.hero-pts-wrap {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 4px;
+}
+.hero-pts {
+  font-size: 2.8rem;
+  font-weight: 900;
+  color: var(--primary-gold);
+  line-height: 1;
+  letter-spacing: -1px;
+}
+.hero-rank-badge {
+  text-align: center;
+  padding: 0;
+  background: none;
+  border: none;
+}
+.hero-grade {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--primary-gold);
+  background: rgba(251, 191, 36, 0.1);
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  margin: 0 auto 4px;
+  border: 2px solid rgba(251, 191, 36, 0.2);
+}
+.hero-rank-title {
+  font-size: 0.6rem;
+  font-weight: 800;
+  color: var(--primary-purple);
+  background: rgba(129, 140, 248, 0.1);
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+/* XP PROGRESS BAR */
+.xp-bar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.xp-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-dark);
+}
+.hero-prog-bg {
+  background: #f1f5f9;
+  border-radius: 9999px;
+  height: 12px;
+  overflow: hidden;
+}
+.hero-prog-fill {
+  background: linear-gradient(90deg, #a8c0ff, #7b61ff);
+  border-radius: 9999px;
+  height: 100%;
+  transition: width 0.5s ease;
+}
 
 /* DATE PICKER */
-.date-bar{margin:0 12px 12px;background:#fff;border-radius:12px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.06);border:2px solid #e3f2fd}
-.date-label{font-size:.75rem;font-weight:700;color:#1565C0;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;display:block}
-.date-input-wrap{position:relative}
-.date-input-wrap::before{content:'📅';position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:1.1rem;z-index:1;pointer-events:none}
-.date-bar input[type=date]{width:100%;border:1.5px solid #dde3f0;border-radius:10px;padding:11px 12px 11px 38px;font-size:.88rem;font-family:'Inter',sans-serif;outline:none;color:#1a1a2e;background:#f8fbff;font-weight:600}
-.date-bar input:focus{border-color:#1565C0;background:#fff}
+.date-bar {
+  margin: 0 16px 8px;
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 8px 12px;
+  border: var(--border-card);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.date-label {
+  font-family: var(--font-title);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+.date-input-wrap {
+  position: relative;
+  flex: 1;
+}
+.date-input-wrap::before {
+  content: '📅';
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.9rem;
+  z-index: 2;
+  pointer-events: none;
+}
+.date-bar input[type=date] {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 8px 10px 8px 36px;
+  font-size: 0.85rem;
+  font-family: var(--font-game);
+  outline: none;
+  color: var(--text-dark);
+  background: rgba(0,0,0,0.2);
+  font-weight: 700;
+  transition: all 0.2s;
+}
+.date-bar input:focus {
+  border-color: var(--primary-purple);
+}
 
-/* HABIT GRID */
-.habit-section-title{font-size:.75rem;font-weight:700;color:#666;margin:0 12px 10px;text-transform:uppercase;letter-spacing:.8px}
-.habit-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0 12px 75px;padding-bottom:16px}
-.habit-tile{background:#fff;border-radius:14px;padding:16px 14px;box-shadow:0 3px 12px rgba(0,0,0,.08);cursor:pointer;transition:all .25s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;border:2px solid transparent}
-.habit-tile::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#1565C0,#42A5F5);opacity:0;transition:opacity .25s}
-.habit-tile.filled::before{opacity:1}
-.habit-tile:active{transform:scale(.96);box-shadow:0 6px 20px rgba(21,101,192,.25)}
-.habit-tile.filled{border-color:#e3f2fd;background:linear-gradient(to bottom,#f8fbff,#fff)}
-.habit-icon-wrap{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,#e3f2fd,#bbdefb);display:flex;align-items:center;justify-content:center;margin-bottom:10px;transition:all .25s;box-shadow:0 2px 8px rgba(21,101,192,.1)}
-.habit-tile.filled .habit-icon-wrap{background:linear-gradient(135deg,#1565C0,#42A5F5);box-shadow:0 4px 12px rgba(21,101,192,.3)}
-.habit-icon-wrap svg{width:24px;height:24px;color:#1565C0;transition:color .25s}
-.habit-tile.filled .habit-icon-wrap svg{color:#fff}
-.habit-label{font-size:.86rem;font-weight:700;color:#1a1a2e;margin-bottom:4px;line-height:1.2}
-.habit-pts{font-size:.74rem;color:#888;font-weight:500}
-.habit-tile.filled .habit-pts{color:#1565C0;font-weight:700}
-.habit-badge{position:absolute;top:8px;right:8px;background:#4CAF50;color:#fff;font-size:.65rem;font-weight:700;padding:3px 7px;border-radius:6px;opacity:0;transform:scale(.8);transition:all .25s}
-.habit-tile.filled .habit-badge{opacity:1;transform:scale(1)}
+/* DAILY QUEST GRID */
+.habit-section-title {
+  font-family: var(--font-title);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 4px 16px 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.habit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin: 0 16px 12px;
+  flex: 1;
+  overflow-y: hidden;
+}
+.habit-tile {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  border: var(--border-card);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  gap: 12px;
+}
+.habit-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+.habit-tile.filled {
+  background: rgba(52, 211, 153, 0.1);
+  border-color: rgba(52, 211, 153, 0.2);
+}
+.habit-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(251, 191, 36, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.habit-tile.filled .habit-icon-wrap {
+  background: rgba(52, 211, 153, 0.2);
+}
+.habit-icon-wrap svg {
+  width: 20px;
+  height: 20px;
+  color: var(--primary-gold);
+}
+.habit-tile.filled .habit-icon-wrap svg {
+  color: var(--accent-green);
+}
+.habit-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  flex: 1;
+}
+.habit-label {
+  font-family: var(--font-title);
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 2px;
+  line-height: 1.15;
+}
+.habit-pts {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+.habit-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--accent-green);
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-bottom-left-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
 
-/* SAVE BAR */
-.save-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:14px 12px;box-shadow:0 -4px 20px rgba(0,0,0,.12);display:flex;align-items:center;gap:12px;z-index:50;border-top:1px solid #e3f2fd}
-.save-info{flex:1;display:flex;flex-direction:column;gap:2px}
-.save-total-label{font-size:.7rem;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-.save-total-pts{font-size:1.5rem;font-weight:800;color:#1565C0;line-height:1;display:flex;align-items:baseline;gap:4px}
-.save-total-pts span{font-size:.8rem;color:#888;font-weight:500}
-.btn-save{padding:12px 24px;background:linear-gradient(135deg,#1565C0,#1976D2);color:#fff;border:none;border-radius:12px;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;flex-shrink:0;box-shadow:0 4px 12px rgba(21,101,192,.3)}
-.btn-save:active{transform:scale(.96);box-shadow:0 2px 8px rgba(21,101,192,.2)}
+/* SAVE BOTTOM BAR */
+.save-bar {
+  background: rgba(30, 41, 59, 0.95);
+  padding: 12px 16px;
+  border-top: var(--border-card);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 50;
+  backdrop-filter: blur(15px);
+  margin-top: auto;
+}
+.save-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.save-total-label {
+  font-family: var(--font-title);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.save-total-pts {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--primary-gold);
+}
+.btn-save {
+  padding: 12px 20px;
+  font-size: 0.85rem;
+}
 
-/* POPUP */
-#popup-habit{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;display:none;align-items:flex-end;justify-content:center;padding:0}
-#popup-habit.active{display:flex}
-.popup-content{background:#fff;width:100%;max-width:100%;border-radius:18px 18px 0 0;box-shadow:0 -6px 30px rgba(0,0,0,.2);max-height:85vh;overflow-y:auto;display:flex;flex-direction:column}
-.popup-handle{width:40px;height:4px;background:#d0d0d0;border-radius:3px;margin:8px auto 6px;flex-shrink:0}
-.popup-header{padding:14px 16px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px;flex-shrink:0;background:#fff;position:sticky;top:0;z-index:10}
-.popup-icon-wrap{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#1565C0,#42A5F5);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.popup-icon-wrap svg{width:20px;height:20px;color:#fff}
-.popup-title-wrap{flex:1;min-width:0}
-.popup-name{font-size:.95rem;font-weight:700;color:#1a1a2e;margin-bottom:2px}
-.popup-max{font-size:.72rem;color:#888}
-.btn-close-popup{background:none;border:none;cursor:pointer;color:#999;padding:4px;flex-shrink:0}
-.btn-close-popup:active{opacity:.6}
-.popup-body{padding:14px 16px 16px;flex:1;overflow-y:auto}
-.popup-section{margin-bottom:18px}
-.popup-section:last-of-type{margin-bottom:0}
-.popup-section-title{font-size:.75rem;font-weight:700;color:#666;margin-bottom:9px;text-transform:uppercase;letter-spacing:.5px}
-.option-list{display:flex;flex-direction:column;gap:7px}
-.option-btn{padding:11px 12px;background:#f5f9ff;border:2px solid #e0e7f5;border-radius:10px;text-align:left;cursor:pointer;transition:all .15s;font-size:.84rem;font-weight:500;color:#333;display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;-webkit-tap-highlight-color:transparent}
-.option-btn:active{background:#e8f2ff;border-color:#1565C0;transform:scale(.98)}
-.option-btn.selected{background:#e3f2fd;border-color:#1565C0;color:#1565C0;font-weight:600}
-.option-label{flex:1;min-width:0;line-height:1.3}
-.option-pts{font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:5px;white-space:nowrap;flex-shrink:0;line-height:1.2}
-.option-pts.pts-5{background:#e8f5e9;color:#2e7d32}
-.option-pts.pts-3{background:#fff9c4;color:#f57f17}
-.option-pts.pts-0{background:#ffebee;color:#c62828}
-.option-btn.selected .option-pts.pts-5{background:#2e7d32;color:#fff}
-.option-btn.selected .option-pts.pts-3{background:#f57f17;color:#fff}
-.option-btn.selected .option-pts.pts-0{background:#c62828;color:#fff}
-.option-input{margin-top:5px;width:100%;padding:8px 11px;border:1.5px solid #dde3f0;border-radius:8px;font-size:.84rem;font-family:'Inter',sans-serif;outline:none}
-.option-input:focus{border-color:#1565C0}
-.popup-footer{padding:14px 16px;background:#fff;border-top:1px solid #eee;flex-shrink:0;position:sticky;bottom:0}
-.btn-confirm-popup{width:100%;padding:12px;background:linear-gradient(135deg,#1565C0,#1976D2);color:#fff;border:none;border-radius:10px;font-size:.9rem;font-weight:700;cursor:pointer;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:6px}
-.btn-confirm-popup:active{opacity:.9;transform:scale(.98)}
+/* POPUP (QUEST SELECT DIALOGUE) */
+#popup-habit {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+}
+#popup-habit.active {
+  display: flex;
+}
+.popup-content {
+  background: var(--bg-card);
+  width: 90%;
+  max-width: 400px;
+  border-radius: 24px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: var(--border-card);
+}
+.popup-handle {
+  display: none;
+}
+.popup-header {
+  padding: 24px;
+  border-bottom: var(--border-card);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-direction: column;
+  text-align: center;
+  background: var(--bg-card);
+}
+.popup-icon-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: rgba(251, 191, 36, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+.popup-icon-wrap svg {
+  width: 32px;
+  height: 32px;
+  color: var(--primary-gold);
+}
+.popup-title-wrap {
+  width: 100%;
+}
+.popup-name {
+  font-family: var(--font-title);
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+.popup-max {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-top: 4px;
+}
+.btn-close-popup {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 8px;
+  transition: all 0.2s;
+}
+.btn-close-popup:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--accent-red);
+}
+.popup-body {
+  padding: 24px;
+  overflow-y: auto;
+}
+.popup-section {
+  margin-bottom: 20px;
+}
+.popup-section-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+.option-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.option-btn {
+  padding: 14px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  font-family: var(--font-game);
+}
+.option-btn:hover {
+  border-color: var(--primary-purple);
+  background: rgba(255,255,255,0.08);
+  transform: translateY(-2px);
+}
+.option-btn.selected {
+  background: var(--primary-purple);
+  border-color: var(--primary-purple-hover);
+  color: #fff;
+}
+.option-pts {
+  font-size: 0.72rem;
+  font-weight: 900;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+.option-pts.pts-5 { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+.option-pts.pts-3 { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+.option-pts.pts-0 { background: rgba(239, 68, 68, 0.2); color: #f87171; }
+.option-btn.selected .option-pts {
+  background: #fff !important;
+  color: var(--primary-purple) !important;
+}
+.option-input {
+  margin-top: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  font-size: 0.88rem;
+  font-family: var(--font-game);
+  outline: none;
+  background: rgba(0,0,0,0.2);
+  color: var(--text-dark);
+}
+.option-input:focus {
+  border-color: var(--primary-purple);
+  box-shadow: 0 0 0 3px rgba(123, 97, 255, 0.1);
+}
+.popup-footer {
+  padding: 16px 24px 24px;
+  border-top: none;
+}
+.btn-confirm-popup {
+  width: 100%;
+  padding: 14px;
+}
 
-/* TEACHER PAGE */
-#page-teacher{display:none;min-height:100vh;background:#f0f4ff}
-#page-teacher.active{display:block!important}
-.gate-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
-.gate-card{background:#fff;border-radius:16px;padding:28px 24px;width:100%;max-width:360px;box-shadow:0 12px 40px rgba(0,0,0,.12);text-align:center}
-.gate-icon{width:56px;height:56px;background:linear-gradient(135deg,#1565C0,#42A5F5);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
-.gate-icon svg{width:28px;height:28px;color:#fff}
-.gate-title{font-size:1.15rem;font-weight:800;color:#1565C0;margin-bottom:5px}
-.gate-sub{font-size:.8rem;color:#888;margin-bottom:20px}
-.btn-secondary{padding:9px 18px;background:#fff;border:2px solid #1565C0;border-radius:9px;font-size:.82rem;font-weight:600;color:#1565C0;cursor:pointer;transition:all .2s}
-.btn-secondary:active{background:#e3f2fd}
-.teacher-topbar{background:linear-gradient(135deg,#1565C0,#1976D2);padding:14px 16px;display:flex;align-items:center;gap:10px;color:#fff;box-shadow:0 3px 16px rgba(21,101,192,.3)}
-.teacher-topbar-title{flex:1;font-size:.95rem;font-weight:800;color:#fff;line-height:1.3}
-.btn-teacher-logout{padding:6px 12px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:7px;font-size:.72rem;color:#fff;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:4px;flex-shrink:0}
-.btn-teacher-logout:active{background:rgba(255,255,255,.25)}
-.tab-bar{background:#fff;padding:0 12px;display:flex;gap:0;border-bottom:2px solid #eee;overflow-x:auto}
-.tab-btn{padding:12px 16px;background:none;border:none;font-size:.8rem;font-weight:600;color:#888;cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-2px;transition:all .2s;white-space:nowrap;flex-shrink:0}
-.tab-btn.active{color:#1565C0;border-bottom-color:#1565C0}
-.tab-btn:active{color:#1565C0}
-.tab-content{padding:12px}
+/* TEACHER PANEL & TABS */
+.gate-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.gate-card {
+  background: var(--bg-card);
+  border-radius: 28px;
+  padding: 36px 28px;
+  width: 100%;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  border: var(--border-card);
+  text-align: center;
+  backdrop-filter: blur(12px);
+}
+.gate-icon {
+  width: 70px;
+  height: 70px;
+  background: rgba(129, 140, 248, 0.1);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  border: 2px solid rgba(129, 140, 248, 0.2);
+  box-shadow: 0 8px 16px rgba(129, 140, 248, 0.2);
+}
+.gate-icon svg { color: var(--primary-purple); }
+.gate-title {
+  font-family: var(--font-title);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 6px;
+}
+.gate-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  font-weight: 600;
+}
+.teacher-topbar {
+  background: var(--primary-purple);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.teacher-topbar-title {
+  flex: 1;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #fff;
+  font-family: var(--font-title);
+}
+.btn-teacher-logout {
+  padding: 8px 12px;
+  font-size: 0.75rem;
+}
+.tab-bar {
+  background: #ffffff;
+  display: flex;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  overflow-x: auto;
+}
+.tab-btn {
+  flex: 1;
+  padding: 14px 10px;
+  background: none;
+  border: none;
+  font-family: var(--font-title);
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  border-bottom: 3px solid transparent;
+}
+.tab-btn.active {
+  color: var(--primary-purple);
+  border-bottom-color: var(--primary-purple);
+  background: #f5f3ff;
+}
+.tab-content {
+  padding: 16px;
+  flex: 1;
+}
 
-/* STAT CARDS */
-.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
-.stat-card{background:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
-.stat-label{font-size:.7rem;font-weight:600;color:#888;margin-bottom:5px}
-.stat-val{font-size:1.5rem;font-weight:800;color:#1565C0}
+/* OVERVIEW GRIDS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 14px;
+  border: var(--border-card);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.stat-val {
+  font-family: var(--font-title);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--primary-purple);
+}
+.participation-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 16px;
+  border: var(--border-card);
+  margin-bottom: 20px;
+}
+.participation-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 12px;
+}
+.prog-bar-sm {
+  background: #f1f5f9;
+  border-radius: 8px;
+  height: 12px;
+  overflow: hidden;
+}
+.prog-bar-sm-fill {
+  background: var(--primary-purple);
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.3s ease;
+}
 
 /* LEADERBOARD */
-.section-title{font-size:.88rem;font-weight:700;color:#333;margin:16px 0 9px}
-.leader-list{display:flex;flex-direction:column;gap:7px}
-.leader-item{background:#fff;border-radius:11px;padding:10px 13px;display:flex;align-items:center;gap:10px;box-shadow:0 2px 7px rgba(0,0,0,.05)}
-.leader-rank{width:28px;height:28px;border-radius:7px;background:#e3f2fd;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.84rem;color:#1565C0;flex-shrink:0}
-.leader-rank.gold{background:#FFF9C4;color:#F57F17}
-.leader-rank.silver{background:#F5F5F5;color:#616161}
-.leader-rank.bronze{background:#FBE9E7;color:#BF360C}
-.leader-name{flex:1;font-weight:600;font-size:.84rem;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.leader-class{font-size:.7rem;color:#888}
-.leader-pts{font-weight:800;color:#1565C0;font-size:.88rem;flex-shrink:0}
+.section-title {
+  font-family: var(--font-title);
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 24px 0 16px;
+}
+.leader-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.leader-item {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: var(--border-card);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}
+.leader-rank {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  font-size: 1rem;
+  background: #f8fafc;
+  color: var(--text-muted);
+}
+.leader-rank.gold { background: #fef3c7; color: #d97706; }
+.leader-rank.silver { background: #f1f5f9; color: #475569; }
+.leader-rank.bronze { background: #ffedd5; color: #c2410c; }
+.leader-info {
+  flex: 1;
+  min-width: 0;
+}
+.leader-name {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.leader-class {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+.leader-pts {
+  font-weight: 800;
+  color: var(--primary-purple);
+  font-size: 1.05rem;
+}
 
-/* TABLES */
-.table-wrap{overflow-x:auto;background:#fff;border-radius:11px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
-table{width:100%;border-collapse:collapse;font-size:.8rem;min-width:520px}
-thead th{background:#f0f4ff;padding:10px 8px;text-align:left;font-weight:700;color:#555;font-size:.72rem;white-space:nowrap;position:sticky;top:0;z-index:5}
-tbody td{padding:10px 8px;border-bottom:1px solid #f0f0f0;color:#333;vertical-align:middle}
-tbody tr:active{background:#fafcff}
-tbody tr:last-child td{border-bottom:none}
-.student-name-cell{font-weight:600;color:#1a1a2e;min-width:110px}
-.student-class-cell{min-width:50px}
-.student-actions-cell{whitespace:nowrap}
+/* DATA TABLES & CONTROLS */
+.search-add-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.search-input {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 9999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  outline: none;
+  font-family: var(--font-game);
+}
+.search-input:focus {
+  border-color: var(--primary-purple);
+}
+.btn-add {
+  padding: 12px 20px;
+}
+.table-wrap {
+  overflow-x: auto;
+  background: var(--bg-card);
+  border-radius: 20px;
+  border: var(--border-card);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  min-width: 480px;
+}
+thead th {
+  background: #f8fafc;
+  padding: 16px 12px;
+  text-align: left;
+  font-weight: 800;
+  color: var(--text-dark);
+  font-size: 0.8rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+tbody td {
+  padding: 16px 12px;
+  border-bottom: 1px solid #f1f5f9;
+  color: var(--text-muted);
+  vertical-align: middle;
+}
+tbody tr:last-child td { border-bottom: none; }
+.student-name-cell { font-weight: 700; color: var(--text-dark); font-family: var(--font-title); }
+.student-actions-cell {
+  display: flex;
+  gap: 8px;
+}
+.btn-icon {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 10px;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+.btn-edit:hover { background: #eff6ff; color: #3b82f6; border-color: #bfdbfe; }
+.btn-del:hover { background: #fef2f2; color: #ef4444; border-color: #fecaca; }
 
-/* SEARCH/ADD BAR */
-.search-add-bar{display:flex;gap:8px;margin-bottom:12px;flex-direction:column}
-.search-input{width:100%;padding:9px 12px;border:1.5px solid #dde3f0;border-radius:9px;font-size:.84rem;font-family:'Inter',sans-serif;outline:none}
-.search-input:focus{border-color:#1565C0}
-.btn-add{width:100%;padding:10px 16px;background:#1565C0;color:#fff;border:none;border-radius:9px;font-size:.84rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
-.btn-add:active{background:#0d47a1;transform:scale(.98)}
-.btn-icon{background:none;border:none;cursor:pointer;padding:4px;border-radius:5px;transition:all .15s}
-.btn-edit{color:#1565C0}
-.btn-edit:active{background:#e3f2fd}
-.btn-del{color:#ef5350}
-.btn-del:active{background:#ffebee}
+/* RECAP FILTERING */
+.recap-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.recap-summary {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.recap-stat {
+  background: var(--bg-card);
+  border-radius: 16px;
+  padding: 16px;
+  flex: 1;
+  border: var(--border-card);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+.recap-stat-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
+.recap-stat-val { font-family: var(--font-title); font-size: 1.6rem; font-weight: 800; color: var(--primary-purple); margin-top: 4px; }
+.grade-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.grade-A { background: #dcfce7; color: #16a34a; }
+.grade-B { background: #dbeafe; color: #2563eb; }
+.grade-C { background: #fef3c7; color: #d97706; }
+.grade-D { background: #fee2e2; color: #dc2626; }
 
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;display:none;align-items:center;justify-content:center;padding:16px}
-.modal-overlay.active{display:flex}
-.modal-card{background:#fff;border-radius:16px;padding:24px 20px;width:100%;max-width:420px;box-shadow:0 12px 40px rgba(0,0,0,.2)}
-.modal-title{font-size:1rem;font-weight:800;color:#1a1a2e;margin-bottom:16px}
-.modal-footer{display:flex;gap:8px;margin-top:18px;justify-content:flex-end}
-.btn-cancel{padding:9px 18px;background:#fff;border:2px solid #ddd;border-radius:9px;font-size:.84rem;font-weight:600;color:#666;cursor:pointer}
-.btn-cancel:active{border-color:#999}
-.btn-danger{padding:9px 18px;background:#ef5350;color:#fff;border:none;border-radius:9px;font-size:.84rem;font-weight:700;cursor:pointer}
-.btn-danger:active{background:#c62828;transform:scale(.98)}
+/* OVERLAYS & MODALS (DIALOGUE BOXES) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  z-index: 2000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  backdrop-filter: blur(8px);
+}
+.modal-overlay.active { display: flex; }
+.modal-card {
+  background: var(--bg-card);
+  border-radius: 28px;
+  padding: 32px 28px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+  border: var(--border-card);
+}
+.modal-title {
+  font-family: var(--font-title);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 24px;
+  text-align: center;
+}
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+  justify-content: flex-end;
+}
+.btn-cancel {
+  padding: 14px 24px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-muted);
+  border: none;
+  box-shadow: none;
+}
+.btn-cancel:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text-dark);
+}
 
-/* TOAST */
-.toast-container{position:fixed;bottom:70px;left:12px;right:12px;z-index:9999;display:flex;flex-direction:column;gap:7px}
-.toast{padding:11px 16px;border-radius:9px;font-size:.82rem;font-weight:600;color:#fff;box-shadow:0 3px 14px rgba(0,0,0,.15);animation:slideUp .3s ease}
-.toast.success{background:#2e7d32}
-.toast.error{background:#c62828}
-.toast.info{background:#1565C0}
-@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+/* HONESTY COMMITMENT SPECIAL STYLING */
+.honesty-box {
+  background: rgba(52, 211, 153, 0.1);
+  border-left: 5px solid var(--accent-green);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  color: var(--text-dark);
+}
+.honesty-checkbox-wrap {
+  display: flex;
+  align-items: start;
+  gap: 12px;
+  cursor: pointer;
+  padding: 16px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 16px;
+  margin-bottom: 24px;
+  border: 2px dashed rgba(255,255,255,0.1);
+  color: var(--text-dark);
+  transition: all 0.2s;
+}
+.honesty-checkbox-wrap:hover {
+  border-color: var(--primary-purple);
+  background: rgba(255,255,255,0.05);
+}
 
-/* LOADING */
-.loading-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9998;display:none;align-items:center;justify-content:center}
-.loading-overlay.active{display:flex}
-.loading-spinner{width:48px;height:48px;border:4px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{color:#fff;margin-top:16px;font-size:.9rem;font-weight:600}
+/* TOAST notifications */
+.toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: calc(100% - 40px);
+  max-width: 320px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  padding: 16px 20px;
+  border-radius: 16px;
+  font-family: var(--font-title);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.15);
+  animation: toastSlideIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: auto;
+}
+@keyframes toastSlideIn {
+  from { transform: translateX(120%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.toast.success { background: var(--accent-green); }
+.toast.error { background: var(--accent-red); }
+.toast.info { background: var(--accent-cyan); }
 
-/* RECAP */
-.recap-filters{display:flex;gap:8px;margin-bottom:12px;flex-direction:column}
-.recap-filters select,.recap-filters input{padding:8px 11px;border:1.5px solid #dde3f0;border-radius:8px;font-size:.82rem;font-family:'Inter',sans-serif;outline:none;width:100%}
-.recap-filters select:focus,.recap-filters input:focus{border-color:#1565C0}
-.btn-pdf{padding:9px 16px;background:#ef5350;color:#fff;border:none;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;width:100%}
-.btn-pdf:active{background:#c62828;transform:scale(.98)}
-.recap-summary{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-.recap-stat{background:#fff;border-radius:10px;padding:11px 13px;flex:1;min-width:100px;box-shadow:0 2px 7px rgba(0,0,0,.05)}
-.recap-stat-label{font-size:.68rem;color:#888;font-weight:600}
-.recap-stat-val{font-size:1.3rem;font-weight:800;color:#1565C0}
-.prog-bar-sm{background:#e0e7f5;border-radius:4px;height:5px;margin-top:3px}
-.prog-bar-sm-fill{background:linear-gradient(90deg,#1565C0,#42A5F5);border-radius:4px;height:5px;transition:width .4s}
-.grade-badge{display:inline-block;padding:2px 7px;border-radius:5px;font-size:.7rem;font-weight:700}
-.grade-A{background:#e8f5e9;color:#1b5e20}
-.grade-B{background:#e3f2fd;color:#0d47a1}
-.grade-C{background:#fff9c4;color:#f57f17}
-.grade-D{background:#ffebee;color:#b71c1c}
+/* FULLSCREEN OVERLAY LOADING */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.85);
+  z-index: 99998;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+}
+.loading-overlay.active { display: flex; }
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid #e2e8f0;
+  border-top-color: var(--primary-purple);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  color: var(--text-dark);
+  margin-top: 16px;
+  font-family: var(--font-title);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
 </style>
 </head>
 <body>
@@ -289,243 +1338,343 @@ tbody tr:last-child td{border-bottom:none}
   </div>
 </div>
 
-<!-- PAGE: LOGIN -->
-<div class="page active" id="page-login">
-  <div class="login-card">
-    <div class="login-logo"><i data-lucide="star" style="width:38px;height:38px;color:#fff"></i></div>
-    <div class="login-title">Jurnal 7 Kebiasaan</div>
-    <div class="login-sub">Catat kebiasaan harianmu setiap hari</div>
-    <div class="form-group">
-      <label>Pilih Nama Siswa</label>
-      <select id="login-student-select"><option value="">-- Pilih Siswa --</option></select>
+<!-- PORTRAIT MOBILE APP WRAPPER -->
+<div id="app-container">
+  <!-- PAGE: GAME STARTUP OPENING -->
+  <div class="page active" id="page-opening">
+    <div class="opening-content">
+      <div class="opening-logo">
+        <i data-lucide="shield-check" style="width:60px;height:60px;color:var(--accent-cyan)"></i>
+      </div>
+      <div class="opening-title" style="font-size: 1.65rem; line-height: 1.35; margin-bottom: 4px;">SD NEGERI PENGKOL</div>
+      <div class="opening-subtitle" style="margin-bottom: 40px; color: var(--accent-cyan);">7 Kebiasaan Anak Indonesia Hebat</div>
+      <div class="opening-progress-wrap" id="opening-loader">
+        <div class="opening-progress">
+          <div class="opening-progress-bar" id="opening-progress-bar"></div>
+        </div>
+        <div class="opening-status" id="opening-status">Menghubungkan Server...</div>
+      </div>
+      <button class="btn-game btn-game-cyan btn-start-game hidden" id="btn-start-game">
+        Mulai Track Statistik
+      </button>
     </div>
-    <div class="form-group">
-      <label>Password</label>
-      <input type="password" id="login-pin" placeholder="Masukkan password">
-    </div>
-    <button class="btn-primary" id="btn-student-login" style="display:flex;align-items:center;justify-content:center;gap:8px">
-      <i data-lucide="log-in" style="width:18px;height:18px"></i> Masuk
-    </button>
-    <div class="link-small">Ingin mengelola data? <button id="link-teacher-login" style="background:none;border:none;color:#1565C0;font-weight:600;cursor:pointer;font-size:.8rem;text-decoration:underline;font-family:'Inter',sans-serif;">Login sebagai Guru/Admin</button></div>
-  </div>
-</div>
-
-<!-- PAGE: JOURNAL -->
-<div class="page" id="page-journal">
-  <div class="topbar">
-    <div class="topbar-avatar" id="topbar-avatar">?</div>
-    <div class="topbar-info">
-      <div class="topbar-name" id="topbar-name">Nama Siswa</div>
-      <div class="topbar-class" id="topbar-class">Kelas -</div>
-    </div>
-    <button class="btn-logout" id="btn-journal-logout">
-      <i data-lucide="log-out" style="width:15px;height:15px"></i> Keluar
-    </button>
   </div>
 
-  <div class="hero-card">
-    <div class="hero-inner">
-      <div class="hero-date" id="hero-date">Hari ini</div>
+  <!-- PAGE: LOGIN -->
+  <div class="page" id="page-login">
+    <div class="login-card">
+      <div class="login-logo"><i data-lucide="shield" style="width:40px;height:40px;color:var(--primary-purple)"></i></div>
+      <div class="login-title">7 KEBIASAAN ANAK INDONESIA HEBAT</div>
+      <div class="login-sub">SD Negeri Pengkol - Kelas V</div>
+      
+      <div class="form-group">
+        <label>Pilih Pemain (Siswa)</label>
+        <select id="login-student-select">
+          <option value="">-- Pilih Siswa --</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Kunci Keamanan (PIN)</label>
+        <input type="password" id="login-pin" placeholder="Masukkan PIN">
+      </div>
+      
+      <button class="btn-game btn-game-cyan btn-login-submit" id="btn-student-login">
+        <i data-lucide="log-in" style="width:18px;height:18px"></i> MASUK / LOG IN
+      </button>
+      
+      <div class="link-small">
+        Akses Administrasi Data? <button id="link-teacher-login">Panel Guru</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE: JOURNAL -->
+  <div class="page" id="page-journal">
+    <div class="topbar">
+      <div class="topbar-avatar" id="topbar-avatar">?</div>
+      <div class="topbar-info">
+        <div class="topbar-name" id="topbar-name">Nama Siswa</div>
+        <div class="topbar-class" id="topbar-class">Kelas -</div>
+      </div>
+      <button class="btn-game btn-game-red btn-logout" id="btn-journal-logout">
+        <i data-lucide="log-out" style="width:14px;height:14px"></i> Keluar
+      </button>
+    </div>
+
+    <!-- NILAI KAMU CARD -->
+    <div class="hero-card">
+      <div class="hero-date" id="hero-date">📅 Hari ini</div>
       <div class="hero-score-section">
         <div class="hero-score-left">
-          <div class="hero-label">Total Poin</div>
-          <div class="hero-pts" id="hero-pts">0</div>
-          <div class="hero-max">dari 40 poin</div>
+          <div class="hero-label">Nilai Kamu</div>
+          <div class="hero-pts-wrap">
+            <span class="hero-pts" id="hero-pts">0</span>
+            <span class="hero-max">/ 40 XP</span>
+          </div>
         </div>
-        <div class="hero-grade" id="hero-grade">-</div>
+        <div class="hero-rank-badge">
+          <div class="hero-grade" id="hero-grade">-</div>
+          <div class="hero-rank-title" id="hero-rank-title">Pemula</div>
+        </div>
       </div>
-      <div class="hero-prog-bg"><div class="hero-prog-fill" id="hero-prog-fill" style="width:0%"></div></div>
-    </div>
-  </div>
-
-  <div class="date-bar">
-    <label class="date-label">Pilih Tanggal Jurnal</label>
-    <div class="date-input-wrap">
-      <input type="date" id="entry-date">
-    </div>
-  </div>
-
-  <div class="habit-section-title">✨ 7 Kebiasaan Anak Indonesia Hebat</div>
-  <div class="habit-grid" id="habit-grid"></div>
-
-  <div class="save-bar">
-    <div class="save-info">
-      <div class="save-total-label">Total Hari Ini</div>
-      <div class="save-total-pts" id="save-total">0 <span>/ 40</span></div>
-    </div>
-    <button class="btn-save" id="btn-save-journal">
-      <i data-lucide="save" style="width:18px;height:18px"></i> Simpan
-    </button>
-  </div>
-</div>
-
-<!-- PAGE: TEACHER -->
-<div class="page" id="page-teacher">
-
-  <!-- GATE -->
-  <div id="teacher-gate">
-    <div class="gate-wrap">
-      <div class="gate-card">
-        <div class="gate-icon"><i data-lucide="shield" style="width:32px;height:32px;color:#fff"></i></div>
-        <div class="gate-title">Akses Guru / Admin</div>
-        <div class="gate-sub">Masukkan password untuk mengakses panel guru</div>
-        <div class="form-group">
-          <label>Password Guru</label>
-          <input type="password" id="teacher-pin-input" placeholder="Masukkan password">
+      <div class="xp-bar-container">
+        <div class="xp-bar-label">
+          <span>Progress Level</span>
+          <span id="hero-xp-pct">0%</span>
         </div>
-        <button class="btn-primary" id="btn-teacher-pin-login" style="display:flex;align-items:center;justify-content:center;gap:8px">
-          <i data-lucide="unlock" style="width:18px;height:18px"></i> Masuk Panel
+        <div class="hero-prog-bg">
+          <div class="hero-prog-fill" id="hero-prog-fill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DATE SELECTION -->
+    <div class="date-bar">
+      <label class="date-label">Pilih Tanggal Jurnal</label>
+      <div class="date-input-wrap">
+        <input type="date" id="entry-date">
+      </div>
+    </div>
+
+    <div class="habit-section-title">⚡ 7 Kebiasaan Anak Indonesia Hebat</div>
+    <div class="habit-grid" id="habit-grid"></div>
+
+    <!-- FLOATING ACTION DOCK -->
+    <div class="save-bar">
+      <div class="save-info">
+        <div class="save-total-label">Akumulasi XP</div>
+        <div class="save-total-pts" id="save-total">0 <span>/ 40 XP</span></div>
+      </div>
+      <button class="btn-game btn-game-green btn-save" id="btn-save-journal">
+        <i data-lucide="save" style="width:18px;height:18px"></i> Simpan Progress
+      </button>
+    </div>
+  </div>
+
+  <!-- PAGE: TEACHER PANEL -->
+  <div class="page" id="page-teacher">
+
+    <!-- GATE -->
+    <div id="teacher-gate" style="width: 100%;">
+      <div class="gate-wrap">
+        <div class="gate-card">
+          <div class="gate-icon"><i data-lucide="shield" style="width:32px;height:32px;color:#fff"></i></div>
+          <div class="gate-title">Akses Guru / Admin</div>
+          <div class="gate-sub">Masukkan password rahasia untuk membuka portal panel</div>
+          
+          <div class="form-group">
+            <label>Password Guru</label>
+            <input type="password" id="teacher-pin-input" placeholder="Masukkan password">
+          </div>
+          
+          <button class="btn-game btn-game-red btn-login-submit" id="btn-teacher-pin-login">
+            <i data-lucide="unlock" style="width:20px;height:20px"></i> Buka Gerbang Panel
+          </button>
+          
+          <div style="margin-top:16px">
+            <button class="btn-game btn-game-cyan" id="btn-back-to-student" style="padding: 10px 18px; font-size: 0.85rem;">
+              ← Kembali ke Login
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL -->
+    <div id="teacher-panel" class="hidden" style="width: 100%;">
+      <div class="teacher-topbar">
+        <i data-lucide="layout-dashboard" style="width:22px;height:22px;color:#fff"></i>
+        <div class="teacher-topbar-title">Panel Guru Petualangan</div>
+        <button class="btn-game btn-game-red btn-teacher-logout" id="btn-teacher-logout">
+          <i data-lucide="log-out" style="width:14px;height:14px"></i> Keluar
         </button>
-        <div style="margin-top:14px">
-          <button class="btn-secondary" id="btn-back-to-student">← Kembali ke Login Siswa</button>
+      </div>
+      
+      <div class="tab-bar" id="teacher-tab-bar">
+        <button class="tab-btn active" data-tab="overview">📊 Overview</button>
+        <button class="tab-btn" data-tab="students">👥 Data Siswa</button>
+        <button class="tab-btn" data-tab="recap">📋 Rekap</button>
+      </div>
+      
+      <!-- TAB: OVERVIEW -->
+      <div id="tab-overview" class="tab-content">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Total Siswa</div><div class="stat-val" id="t-total">0</div></div>
+          <div class="stat-card"><div class="stat-label">Entry Hari Ini</div><div class="stat-val" id="t-today">0</div></div>
+          <div class="stat-card"><div class="stat-label">Rata-rata Poin</div><div class="stat-val" id="t-avg">0</div></div>
+          <div class="stat-card"><div class="stat-label">Nilai Sempurna</div><div class="stat-val" id="t-perfect">0</div></div>
+        </div>
+        
+        <div class="participation-card">
+          <div class="participation-header">
+            <span>Partisipasi Hari Ini</span>
+            <span id="t-pct">0%</span>
+          </div>
+          <div class="prog-bar-sm">
+            <div class="prog-bar-sm-fill" id="t-prog-fill" style="width:0%"></div>
+          </div>
+        </div>
+        
+        <div class="section-title">🏆 Leaderboard Bulan Ini</div>
+        <div class="leader-list" id="leaderboard-list"></div>
+      </div>
+      
+      <!-- TAB: STUDENTS -->
+      <div id="tab-students" class="tab-content hidden">
+        <div class="search-add-bar">
+          <input type="text" class="search-input form-group select" style="margin-bottom:0" id="student-search" placeholder="🔍 Cari nama siswa...">
+          <button class="btn-game btn-game-cyan btn-add" id="btn-add-student">
+            <i data-lucide="user-plus" style="width:16px;height:16px"></i> Tambah
+          </button>
+        </div>
+        
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="text-align:center">No</th>
+                <th>Nama Siswa</th>
+                <th>Kelas</th>
+                <th style="text-align:center">Absen</th>
+                <th style="text-align:center">Password</th>
+                <th style="text-align:center">XP Total</th>
+                <th style="text-align:center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="students-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- TAB: RECAP -->
+      <div id="tab-recap" class="tab-content hidden">
+        <div class="recap-filters">
+          <select id="recap-student-filter" class="form-group select">
+            <option value="">Semua Siswa</option>
+          </select>
+          <input type="month" id="recap-month-filter" class="form-group select">
+          <button class="btn-game btn-game-red btn-pdf" id="btn-download-pdf">
+            <i data-lucide="printer" style="width:16px;height:16px"></i> Download PDF
+          </button>
+        </div>
+        
+        <div class="recap-summary">
+          <div class="recap-stat"><div class="recap-stat-label">Hari Dicatat</div><div class="recap-stat-val" id="recap-days">0</div></div>
+          <div class="recap-stat"><div class="recap-stat-label">Rata-rata XP</div><div class="recap-stat-val" id="recap-avg">0</div></div>
+        </div>
+        
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Tanggal</th>
+                <th>Total</th>
+                <th>Nilai</th>
+                <th>Detail</th>
+              </tr>
+            </thead>
+            <tbody id="recap-tbody"></tbody>
+          </table>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- PANEL -->
-  <div id="teacher-panel" class="hidden">
-    <div class="teacher-topbar">
-      <i data-lucide="layout-dashboard" style="width:24px;height:24px;color:#fff"></i>
-      <div class="teacher-topbar-title">Panel Guru – Jurnal 7 Kebiasaan</div>
-      <button class="btn-teacher-logout" id="btn-teacher-logout">
-        <i data-lucide="log-out" style="width:15px;height:15px"></i> Keluar
-      </button>
-    </div>
-    <div class="tab-bar" id="teacher-tab-bar">
-      <button class="tab-btn active" data-tab="overview">📊 Overview</button>
-      <button class="tab-btn" data-tab="students">👥 Data Siswa</button>
-      <button class="tab-btn" data-tab="recap">📋 Rekap</button>
-    </div>
-    <!-- TAB: OVERVIEW -->
-    <div id="tab-overview" class="tab-content">
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">Total Siswa</div><div class="stat-val" id="t-total">0</div></div>
-        <div class="stat-card"><div class="stat-label">Entry Hari Ini</div><div class="stat-val" id="t-today">0</div></div>
-        <div class="stat-card"><div class="stat-label">Rata-rata Poin</div><div class="stat-val" id="t-avg">0</div></div>
-        <div class="stat-card"><div class="stat-label">Nilai Sempurna</div><div class="stat-val" id="t-perfect">0</div></div>
-      </div>
-      <div style="background:#fff;border-radius:12px;padding:14px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:4px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size:.82rem;font-weight:600;color:#555">Partisipasi Hari Ini</span>
-          <span style="font-size:.82rem;font-weight:700;color:#1565C0" id="t-pct">0%</span>
+  <!-- POPUP: HABIT SELECT (QUEST OPTIONS) -->
+  <div id="popup-habit">
+    <div class="popup-content">
+      <div class="popup-handle"></div>
+      <div class="popup-header">
+        <div class="popup-icon-wrap" id="popup-icon"><i data-lucide="star" style="width:22px;height:22px;color:#fff"></i></div>
+        <div class="popup-title-wrap">
+          <div class="popup-name" id="popup-name">Kebiasaan</div>
+          <div class="popup-max" id="popup-max">Maks 0 XP</div>
         </div>
-        <div class="prog-bar-sm"><div class="prog-bar-sm-fill" id="t-prog-fill" style="width:0%"></div></div>
+        <button class="btn-close-popup" id="popup-close-btn"><i data-lucide="x" style="width:22px;height:22px"></i></button>
       </div>
-      <div class="section-title">🏆 Leaderboard Bulan Ini</div>
-      <div class="leader-list" id="leaderboard-list"></div>
-    </div>
-    <!-- TAB: STUDENTS -->
-    <div id="tab-students" class="tab-content hidden">
-      <div class="search-add-bar">
-        <input type="text" class="search-input" id="student-search" placeholder="🔍 Cari nama siswa...">
-        <button class="btn-add" id="btn-add-student"><i data-lucide="user-plus" style="width:16px;height:16px"></i> Tambah</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th style="text-align:center">No</th><th>Nama Siswa</th><th>Kelas</th><th style="text-align:center">Absen</th><th style="text-align:center">Password</th><th style="text-align:center">Total Poin</th><th style="text-align:center">Aksi</th></tr></thead>
-          <tbody id="students-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-    <!-- TAB: RECAP -->
-    <div id="tab-recap" class="tab-content hidden">
-      <div class="recap-filters">
-        <select id="recap-student-filter"><option value="">Semua Siswa</option></select>
-        <input type="month" id="recap-month-filter">
-        <button class="btn-pdf" id="btn-download-pdf"><i data-lucide="printer" style="width:15px;height:15px"></i> PDF</button>
-      </div>
-      <div class="recap-summary">
-        <div class="recap-stat"><div class="recap-stat-label">Hari Dicatat</div><div class="recap-stat-val" id="recap-days">0</div></div>
-        <div class="recap-stat"><div class="recap-stat-label">Rata-rata Poin</div><div class="recap-stat-val" id="recap-avg">0</div></div>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead><tr><th>Tanggal</th><th>Total</th><th>Nilai</th><th>Detail</th></tr></thead>
-          <tbody id="recap-tbody"></tbody>
-        </table>
+      <div class="popup-body" id="popup-body"></div>
+      <div class="popup-footer">
+        <button class="btn-game btn-game-green btn-confirm-popup" id="btn-confirm-popup">
+          <i data-lucide="check" style="width:20px;height:20px"></i> Simpan Progress
+        </button>
       </div>
     </div>
   </div>
-</div>
 
-<!-- POPUP: HABIT -->
-<div id="popup-habit">
-  <div class="popup-content">
-    <div class="popup-handle"></div>
-    <div class="popup-header">
-      <div class="popup-icon-wrap" id="popup-icon"><i data-lucide="star" style="width:22px;height:22px;color:#fff"></i></div>
-      <div class="popup-title-wrap">
-        <div class="popup-name" id="popup-name">Kebiasaan</div>
-        <div class="popup-max" id="popup-max">Maks 0 poin</div>
+  <!-- MODAL: STUDENT FORM (DIALOGUE) -->
+  <div class="modal-overlay" id="modal-student">
+    <div class="modal-card">
+      <div class="modal-title" id="modal-student-title">Tambah Siswa</div>
+      <input type="hidden" id="modal-student-id">
+      
+      <div class="form-group">
+        <label>Nama Lengkap</label>
+        <input type="text" id="modal-student-name" placeholder="Nama siswa...">
       </div>
-      <button class="btn-close-popup" id="popup-close-btn"><i data-lucide="x" style="width:20px;height:20px"></i></button>
-    </div>
-    <div class="popup-body" id="popup-body"></div>
-    <div class="popup-footer">
-      <button class="btn-confirm-popup" id="btn-confirm-popup">
-        <i data-lucide="check" style="width:18px;height:18px"></i> Konfirmasi Pilihan
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: STUDENT FORM -->
-<div class="modal-overlay" id="modal-student">
-  <div class="modal-card">
-    <div class="modal-title" id="modal-student-title">Tambah Siswa</div>
-    <input type="hidden" id="modal-student-id">
-    <div class="form-group"><label>Nama Lengkap</label><input type="text" id="modal-student-name" placeholder="Nama siswa..."></div>
-    <div class="form-group"><label>Kelas</label><input type="text" id="modal-student-class" placeholder="Contoh: 5A"></div>
-    <div class="form-group"><label>No. Absen</label><input type="number" id="modal-student-number" placeholder="1"></div>
-    <div class="form-group"><label>Password</label><input type="password" id="modal-student-pin" placeholder="Masukkan password"></div>
-    <div class="modal-footer">
-      <button class="btn-cancel" id="btn-modal-student-cancel">Batal</button>
-      <button class="btn-cancel" id="btn-cancel-student2" style="display:none">Batal2</button>
-      <button class="btn-primary" id="btn-modal-student-save" style="width:auto;padding:10px 24px">Simpan</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: CONFIRM DELETE -->
-<div class="modal-overlay" id="modal-confirm">
-  <div class="modal-card">
-    <div class="modal-title">Hapus Siswa</div>
-    <p style="color:#666;margin-bottom:8px">Yakin ingin menghapus <strong><span id="confirm-student-name"></span></strong>?</p>
-    <p style="font-size:.82rem;color:#ef5350">Semua data jurnal siswa ini juga akan terhapus.</p>
-    <div class="modal-footer">
-      <button class="btn-cancel" id="btn-confirm-cancel">Batal</button>
-      <button class="btn-danger" id="btn-confirm-delete">Ya, Hapus</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL: HONESTY COMMITMENT -->
-<div class="modal-overlay" id="modal-honesty">
-  <div class="modal-card" style="max-width:520px">
-    <div style="text-align:center;margin-bottom:16px">
-      <div style="width:64px;height:64px;background:linear-gradient(135deg,#1565C0,#42A5F5);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px">
-        <i data-lucide="shield-check" style="width:32px;height:32px;color:#fff"></i>
+      <div class="form-group">
+        <label>Kelas</label>
+        <input type="text" id="modal-student-class" placeholder="Contoh: 5A">
       </div>
-      <div class="modal-title" style="margin-bottom:8px">Komitmen Kejujuran</div>
-    </div>
-    <div style="background:#e3f2fd;border-left:4px solid #1565C0;padding:16px;border-radius:8px;margin-bottom:20px">
-      <p style="color:#0d47a1;font-size:.95rem;line-height:1.6;margin:0">
-        <strong>Kejujuran adalah bagian dari karakter Anak Indonesia Hebat.</strong> Saya berkomitmen mengisi laporan ini dengan jujur, disiplin, dan penuh tanggung jawab sesuai kebiasaan yang saya lakukan setiap hari.
-      </p>
-    </div>
-    <label style="display:flex;align-items:start;gap:12px;cursor:pointer;padding:12px;background:#f5f9ff;border-radius:10px;margin-bottom:20px">
-      <input type="checkbox" id="honesty-checkbox" style="margin-top:3px;width:18px;height:18px;cursor:pointer">
-      <span style="font-size:.9rem;color:#333;line-height:1.5">Saya telah membaca dan menyetujui komitmen kejujuran di atas</span>
-    </label>
-    <div class="modal-footer">
-      <button class="btn-cancel" id="btn-honesty-cancel">Batal</button>
-      <button class="btn-primary" id="btn-honesty-confirm" style="width:auto;padding:10px 24px" disabled>
-        <i data-lucide="check-circle" style="width:16px;height:16px;vertical-align:middle;margin-right:6px"></i>
-        Simpan Jurnal
-      </button>
+      <div class="form-group">
+        <label>No. Absen</label>
+        <input type="number" id="modal-student-number" placeholder="1">
+      </div>
+      <div class="form-group">
+        <label>Password Akun</label>
+        <input type="password" id="modal-student-pin" placeholder="Masukkan password">
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn-game btn-cancel" id="btn-modal-student-cancel">Batal</button>
+        <button class="btn-game btn-game-green" id="btn-modal-student-save" style="padding: 10px 22px;">Simpan</button>
+      </div>
     </div>
   </div>
+
+  <!-- MODAL: CONFIRM DELETE (DIALOGUE) -->
+  <div class="modal-overlay" id="modal-confirm">
+    <div class="modal-card">
+      <div class="modal-title" style="color:#ef4444">Hapus Siswa</div>
+      <p style="margin-bottom:12px; font-weight:600;">Yakin ingin menghapus murid <strong><span id="confirm-student-name" style="color:#fbbf24"></span></strong>?</p>
+      <p style="font-size:0.85rem; color:#ef4444; margin-bottom:16px;">Semua data jurnal dan poin XP siswa ini juga akan terhapus permanen.</p>
+      <div class="modal-footer">
+        <button class="btn-game btn-cancel" id="btn-confirm-cancel">Batal</button>
+        <button class="btn-game btn-game-red" id="btn-confirm-delete" style="padding: 10px 22px;">Ya, Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: HONESTY COMMITMENT (DIALOGUE) -->
+  <div class="modal-overlay" id="modal-honesty">
+    <div class="modal-card" style="max-width:440px">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="width:60px;height:60px;background:linear-gradient(135deg,#10b981,#059669);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px; border:2.5px solid #fff;">
+          <i data-lucide="shield-check" style="width:30px;height:30px;color:#fff"></i>
+        </div>
+        <div class="modal-title" style="margin-bottom:8px">Komitmen Kejujuran</div>
+      </div>
+      
+      <div class="honesty-box">
+        <p style="color:#06b6d4;font-size:0.92rem;line-height:1.5;margin:0;font-weight:700">
+          Kejujuran adalah ciri pahlawan sejati. Saya berkomitmen mengisi jurnal ini dengan jujur dan penuh tanggung jawab sesuai kebiasaan saya.
+        </p>
+      </div>
+      
+      <label class="honesty-checkbox-wrap" id="honesty-label-click">
+        <input type="checkbox" id="honesty-checkbox" style="margin-top:2px;width:18px;height:18px;cursor:pointer">
+        <span style="font-size:0.85rem;color:#e2e8f0;line-height:1.4;font-weight:700;">Saya setuju mengisi petualangan ini dengan jujur</span>
+      </label>
+      
+      <div class="modal-footer">
+        <button class="btn-game btn-cancel" id="btn-honesty-cancel">Batal</button>
+        <button class="btn-game btn-game-green" id="btn-honesty-confirm" style="padding:10px 22px" disabled>
+          <i data-lucide="check-circle" style="width:16px;height:16px"></i> Simpan
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 </body>
@@ -566,104 +1715,71 @@ let deleteTargetId = null;
 // ============================================================
 // DATA SDK / FIRESTORE
 // ============================================================
-async function getData() {
-  // Fallback to localStorage if Firebase not initialized
-  if (!window.firestoreDb) {
-    try { return JSON.parse(localStorage.getItem(LS_KEY)||'{}'); } catch(e){ return {}; }
-  }
-  
-  // Get data from Firestore
+// ============================================================
+// CACHED DATA & SOURCE FUNCTIONS
+// ============================================================
+let cachedStudents = [];
+let cachedJournals = {};
+let isDataLoaded = false;
+
+// Fetch all data from localStorage immediately (instant offline load)
+function loadLocalCache() {
   try {
-    const { collection, getDocs } = window.firestoreModules;
-    const studentsSnapshot = await getDocs(collection(window.firestoreDb, 'students'));
-    const journalsSnapshot = await getDocs(collection(window.firestoreDb, 'journals'));
-    
-    const students = [];
-    studentsSnapshot.forEach(doc => {
-      students.push({ id: doc.id, ...doc.data() });
-    });
-    
-    const journals = {};
-    journalsSnapshot.forEach(doc => {
-      journals[doc.id] = doc.data();
-    });
-    
-    return { students, journals };
-  } catch(e) {
-    console.error('Firestore error, falling back to localStorage:', e);
-    try { return JSON.parse(localStorage.getItem(LS_KEY)||'{}'); } catch(err){ return {}; }
+    const localData = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
+    cachedStudents = localData.students || [];
+    cachedJournals = localData.journals || {};
+    console.log(`📦 Loaded from local cache: ${cachedStudents.length} students`);
+  } catch (e) {
+    console.error('Error loading local cache:', e);
   }
 }
 
-async function setData(d) {
-  // Always save to localStorage as backup
-  localStorage.setItem(LS_KEY, JSON.stringify(d));
-  
-  // Save to Firestore if available
-  if (!window.firestoreDb) return;
-  
+// Save all memory cache to localStorage
+function saveLocalCache() {
   try {
-    // This is handled by individual save functions now
-    console.log('Data synced to localStorage');
-  } catch(e) {
-    console.error('Firestore sync error:', e);
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      students: cachedStudents,
+      journals: cachedJournals
+    }));
+  } catch (e) {
+    console.error('Error saving local cache:', e);
   }
 }
 
 async function getStudents() {
-  if (!window.firestoreDb) {
-    const data = await getData();
-    return data.students || [];
+  if (!isDataLoaded) {
+    loadLocalCache();
   }
-  
-  try {
-    const { collection, getDocs, orderBy, query } = window.firestoreModules;
-    const q = query(collection(window.firestoreDb, 'students'), orderBy('name'));
-    const snapshot = await getDocs(q);
-    const students = [];
-    snapshot.forEach(doc => {
-      students.push({ id: doc.id, ...doc.data() });
-    });
-    return students;
-  } catch(e) {
-    console.error('Error getting students:', e);
-    const data = await getData();
-    return data.students || [];
-  }
+  return cachedStudents;
 }
 
 async function saveStudents(students) {
-  // Save to localStorage as backup
-  const d = await getData();
-  d.students = students;
-  localStorage.setItem(LS_KEY, JSON.stringify(d));
+  cachedStudents = students;
+  saveLocalCache();
   
-  // Save to Firestore
   if (!window.firestoreDb) return;
   
   try {
-    const { collection, doc, setDoc } = window.firestoreModules;
+    const { doc, setDoc } = window.firestoreModules;
+    // Save in background
     for (const student of students) {
-      await setDoc(doc(window.firestoreDb, 'students', student.id), {
+      setDoc(doc(window.firestoreDb, 'students', student.id), {
         name: student.name,
         kelas: student.kelas,
         absen: student.absen,
         pin: student.pin
-      });
+      }).catch(err => console.error('Error saving student in Firestore:', err));
     }
-    console.log('✅ Students saved to Firestore');
+    console.log('✅ Students updated in Firestore background queue');
   } catch(e) {
-    console.error('Error saving students:', e);
+    console.error('Error in saveStudents:', e);
   }
 }
 
 async function deleteStudent(studentId) {
-  // Delete from localStorage
-  const d = await getData();
-  d.students = (d.students || []).filter(s => s.id !== studentId);
-  localStorage.setItem(LS_KEY, JSON.stringify(d));
+  cachedStudents = cachedStudents.filter(s => s.id !== studentId);
+  saveLocalCache();
   
-  // Delete from Firestore
   if (!window.firestoreDb) return;
   
   try {
@@ -676,72 +1792,44 @@ async function deleteStudent(studentId) {
 }
 
 async function getJournals() {
-  if (!window.firestoreDb) {
-    const data = await getData();
-    return data.journals || {};
+  if (!isDataLoaded) {
+    loadLocalCache();
   }
-  
-  try {
-    const { collection, getDocs } = window.firestoreModules;
-    const snapshot = await getDocs(collection(window.firestoreDb, 'journals'));
-    const journals = {};
-    snapshot.forEach(doc => {
-      journals[doc.id] = doc.data();
-    });
-    return journals;
-  } catch(e) {
-    console.error('Error getting journals:', e);
-    const data = await getData();
-    return data.journals || {};
-  }
-}
-
-async function saveJournals(journals) {
-  // Save to localStorage as backup
-  const d = await getData();
-  d.journals = journals;
-  localStorage.setItem(LS_KEY, JSON.stringify(d));
-  
-  // This is handled by saveJournalEntry now
+  return cachedJournals;
 }
 
 async function saveJournalEntry(studentId, date, entryData) {
   const key = studentId + '_' + date;
+  cachedJournals[key] = entryData;
+  saveLocalCache();
   
-  // Save to localStorage
-  const d = await getData();
-  if (!d.journals) d.journals = {};
-  d.journals[key] = entryData;
-  localStorage.setItem(LS_KEY, JSON.stringify(d));
-  
-  // Save to Firestore
   if (!window.firestoreDb) return;
   
   try {
     const { doc, setDoc } = window.firestoreModules;
-    await setDoc(doc(window.firestoreDb, 'journals', key), {
+    setDoc(doc(window.firestoreDb, 'journals', key), {
       studentId: studentId,
       date: date,
       ...entryData,
       updatedAt: new Date().toISOString()
+    }).then(() => {
+      console.log('✅ Journal entry saved to Firestore');
+    }).catch((e) => {
+      console.error('Error saving journal entry to Firestore:', e);
     });
-    console.log('✅ Journal entry saved to Firestore');
   } catch(e) {
-    console.error('Error saving journal entry:', e);
+    console.error('Error preparing journal entry save:', e);
   }
 }
 
 async function deleteStudentJournals(studentId) {
-  // Delete from localStorage
-  const d = await getData();
-  if (d.journals) {
-    Object.keys(d.journals).forEach(k => {
-      if (k.startsWith(studentId + '_')) delete d.journals[k];
-    });
-    localStorage.setItem(LS_KEY, JSON.stringify(d));
-  }
+  Object.keys(cachedJournals).forEach(k => {
+    if (k.startsWith(studentId + '_')) {
+      delete cachedJournals[k];
+    }
+  });
+  saveLocalCache();
   
-  // Delete from Firestore
   if (!window.firestoreDb) return;
   
   try {
@@ -824,18 +1912,15 @@ function hideLoading() {
 }
 
 function showPage(id) {
-  // Hide all pages first
-  const pages = ['page-login','page-journal','page-teacher'];
+  const pages = ['page-opening','page-login','page-journal','page-teacher'];
   pages.forEach(pid=>{
     const el = document.getElementById(pid);
     if (el) el.classList.remove('active');
   });
-  // Show requested page
   const targetPage = document.getElementById(id);
   if (targetPage) {
     targetPage.classList.add('active');
   }
-  // Re-render icons
   if (typeof lucide !== 'undefined') {
     setTimeout(()=>lucide.createIcons(), 50);
   }
@@ -846,13 +1931,16 @@ function showPage(id) {
 // ============================================================
 async function populateSelect() {
   const sel = document.getElementById('login-student-select');
+  if (!sel) return;
   sel.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+  
   const students = await getStudents();
   students.sort((a,b)=>{
     const kelasA = (a.kelas || '').toString();
     const kelasB = (b.kelas || '').toString();
     return kelasA.localeCompare(kelasB) || (a.absen-b.absen);
   });
+  
   students.forEach(s=>{
     const o = document.createElement('option');
     o.value = s.id;
@@ -873,19 +1961,14 @@ async function doStudentLogin() {
   if (!pin) { toast('Masukkan password','error'); return; }
   
   showLoading('Memverifikasi...');
-  try {
-    const students = await getStudents();
-    const s = students.find(x=>x.id===sel.value);
-    if (!s) { toast('Siswa tidak ditemukan','error'); hideLoading(); return; }
-    if (String(s.pin) !== pin) { toast('Password salah, coba lagi','error'); hideLoading(); return; }
-    currentStudent = s;
-    await openJournalPage();
-    hideLoading();
-  } catch(e) {
-    console.error('Login error:', e);
-    toast('Terjadi kesalahan saat login','error');
-    hideLoading();
-  }
+  const students = await getStudents();
+  const s = students.find(x=>x.id===sel.value);
+  if (!s) { toast('Siswa tidak ditemukan','error'); hideLoading(); return; }
+  if (String(s.pin) !== pin) { toast('Password salah, coba lagi','error'); hideLoading(); return; }
+  
+  currentStudent = s;
+  await openJournalPage();
+  hideLoading();
 }
 
 async function openJournalPage() {
@@ -927,12 +2010,13 @@ function buildHabitGrid() {
     const tile = document.createElement('div');
     tile.className = 'habit-tile'+(filled?' filled':'');
     tile.dataset.key = h.key;
-    const label = filled ? getHabitSummary(h) : 'Belum diisi';
     tile.innerHTML = `
-      <div class="habit-icon-wrap"><i data-lucide="${h.icon}" style="width:24px;height:24px"></i></div>
-      <div class="habit-label">${h.label}</div>
-      <div class="habit-pts">${filled ? pts+' poin' : 'Tap untuk isi'}</div>
-      ${filled?'<div class="habit-badge">✓</div>':''}
+      <div class="habit-icon-wrap"><i data-lucide="${h.icon}"></i></div>
+      <div class="habit-content">
+        <div class="habit-label">${h.label}</div>
+        <div class="habit-pts">${filled ? '+' + pts + ' XP' : 'Maks ' + h.maxPts + ' XP'}</div>
+      </div>
+      ${filled?'<div class="habit-badge">CLEAR</div>':''}
     `;
     tile.addEventListener('click',()=>openPopup(h));
     grid.appendChild(tile);
@@ -979,21 +2063,34 @@ function updateHero() {
   const total = calcTotal();
   const pct = Math.round(total/MAX_PTS*100);
   document.getElementById('hero-pts').textContent = total;
-  document.getElementById('hero-grade').textContent = grade(total);
+  
+  // Set grade rating
+  const g = grade(total);
+  document.getElementById('hero-grade').textContent = g;
+  
+  // Set RPG rank title
+  let rank = "Pemula";
+  if (total >= 36) rank = "Pahlawan";
+  else if (total >= 26) rank = "Ksatria";
+  else if (total >= 16) rank = "Pengembara";
+  document.getElementById('hero-rank-title').textContent = rank;
+  
   document.getElementById('hero-prog-fill').style.width = pct+'%';
-  document.getElementById('save-total').innerHTML = total+' <span>/ '+MAX_PTS+'</span>';
+  document.getElementById('hero-xp-pct').textContent = pct+'%';
+  
+  document.getElementById('save-total').innerHTML = total+' <span>/ '+MAX_PTS+' XP</span>';
   const date = document.getElementById('entry-date').value || todayStr();
-  document.getElementById('hero-date').textContent = fmtDate(date);
+  document.getElementById('hero-date').textContent = '📅 ' + fmtDate(date);
 }
 
 // ============================================================
-// POPUP
+// POPUP DIALOGUE
 // ============================================================
 function openPopup(h) {
   currentPopupHabit = h;
-  document.getElementById('popup-icon').innerHTML = `<i data-lucide="${h.icon}" style="width:22px;height:22px;color:#fff"></i>`;
+  document.getElementById('popup-icon').innerHTML = `<i data-lucide="${h.icon}"></i>`;
   document.getElementById('popup-name').textContent = h.label;
-  document.getElementById('popup-max').textContent = 'Maks '+h.maxPts+' poin';
+  document.getElementById('popup-max').textContent = 'Maks '+h.maxPts+' XP';
   renderPopupBody(h);
   document.getElementById('popup-habit').classList.add('active');
   lucide.createIcons();
@@ -1013,7 +2110,7 @@ function renderPopupBody(h) {
         const btn = document.createElement('button');
         btn.className = 'option-btn'+(saved===opt.l?' selected':'');
         const ptsClass = opt.p===5?'pts-5':opt.p===3?'pts-3':'pts-0';
-        btn.innerHTML = `<span class="option-label">${opt.l}</span><span class="option-pts ${ptsClass}">+${opt.p}</span>`;
+        btn.innerHTML = `<span class="option-label">${opt.l}</span><span class="option-pts ${ptsClass}">+${opt.p} XP</span>`;
         btn.addEventListener('click',()=>{
           ol.querySelectorAll('.option-btn').forEach(b=>b.classList.remove('selected'));
           btn.classList.add('selected');
@@ -1034,22 +2131,27 @@ function renderPopupBody(h) {
       const btn = document.createElement('button');
       btn.className = 'option-btn'+(saved===opt.l?' selected':'');
       const ptsClass = opt.p===5?'pts-5':opt.p===3?'pts-3':'pts-0';
-      btn.innerHTML = `<span class="option-label">${opt.l}</span><span class="option-pts ${ptsClass}">+${opt.p}</span>`;
+      btn.innerHTML = `<span class="option-label">${opt.l}</span><span class="option-pts ${ptsClass}">+${opt.p} XP</span>`;
       wrap.appendChild(btn);
+      
+      let inp = null;
       if (opt.hasInput) {
-        const inp = document.createElement('input');
+        inp = document.createElement('input');
         inp.type = 'text'; inp.className = 'option-input hidden';
         inp.placeholder = opt.inputLabel||'Tambah keterangan...';
         inp.value = (saved===opt.l && savedCustom) ? savedCustom : '';
         if (saved===opt.l) inp.classList.remove('hidden');
-        btn.addEventListener('click',()=>{ inp.classList.remove('hidden'); inp.focus(); });
         wrap.appendChild(inp);
       }
+      
       btn.addEventListener('click',()=>{
         ol.querySelectorAll('.option-btn').forEach(b=>b.classList.remove('selected'));
         ol.querySelectorAll('.option-input').forEach(i=>i.classList.add('hidden'));
         btn.classList.add('selected');
-        if (opt.hasInput) { wrap.querySelector('.option-input').classList.remove('hidden'); }
+        if (opt.hasInput && inp) { 
+          inp.classList.remove('hidden'); 
+          inp.focus();
+        }
       });
       ol.appendChild(wrap);
     });
@@ -1072,15 +2174,15 @@ function confirmPopup() {
     h.subHabits.forEach((sub,idx)=>{
       const sel = sections[idx] ? sections[idx].querySelector('.option-btn.selected') : null;
       if (!sel) { allSelected = false; return; }
-      entryData[h.key]['sub_'+idx] = sel.querySelector('span').textContent;
+      entryData[h.key]['sub_'+idx] = sel.querySelector('.option-label').textContent;
     });
     if (!allSelected) { toast('Pilih semua opsi terlebih dahulu','error'); return; }
   } else {
     const selBtn = body.querySelector('.option-btn.selected');
     if (!selBtn) { toast('Pilih salah satu opsi','error'); return; }
-    const label = selBtn.querySelector('span').textContent;
+    const label = selBtn.querySelector('.option-label').textContent;
     const inp = selBtn.parentElement.querySelector('.option-input');
-    const custom = inp ? inp.value : '';
+    const custom = inp ? inp.value.trim() : '';
     if (!entryData[h.key]) entryData[h.key] = {};
     entryData[h.key].selected = label;
     entryData[h.key].custom = custom;
@@ -1096,7 +2198,7 @@ function closePopup() {
 }
 
 // ============================================================
-// SAVE JOURNAL
+// SAVE JURNAL PROGRESS
 // ============================================================
 function doSaveJournal() {
   const date = document.getElementById('entry-date').value;
@@ -1104,7 +2206,6 @@ function doSaveJournal() {
   const filled = HABITS.filter(h=>entryData[h.key]!==undefined).length;
   if (filled === 0) { toast('Belum ada kebiasaan yang diisi','error'); return; }
   
-  // Show honesty commitment modal
   openHonestyModal();
 }
 
@@ -1121,22 +2222,34 @@ function closeHonestyModal() {
 
 async function confirmSaveJournal() {
   const date = document.getElementById('entry-date').value;
-  await saveEntryData(date);
-  closeHonestyModal();
-  toast('Jurnal berhasil disimpan! Total: '+calcTotal()+' poin','success');
+  showLoading('Menyimpan jurnal...');
+  
+  try {
+    await saveEntryData(date);
+    closeHonestyModal();
+    toast('Jurnal berhasil disimpan! Total: '+calcTotal()+' XP','success');
+  } catch(e) {
+    console.error('Error saving journal:', e);
+    toast('Gagal menyimpan jurnal', 'error');
+  } finally {
+    hideLoading();
+  }
 }
 
 // ============================================================
-// TEACHER AUTH
+// TEACHER AUTH & TABS
 // ============================================================
 function doTeacherLogin() {
-  const pin = document.getElementById('teacher-pin-input').value.trim();
+  const pinInput = document.getElementById('teacher-pin-input');
+  if (!pinInput) return;
+  const pin = pinInput.value.trim();
+  
   if (!pin) { toast('Masukkan password guru','error'); return; }
   if (pin !== TEACHER_PIN) { toast('Password salah','error'); return; }
+  
   document.getElementById('teacher-gate').classList.add('hidden');
   document.getElementById('teacher-panel').classList.remove('hidden');
   switchTeacherTab('overview');
-  lucide.createIcons();
 }
 
 function doTeacherLogout() {
@@ -1147,9 +2260,6 @@ function doTeacherLogout() {
   populateSelect();
 }
 
-// ============================================================
-// TEACHER TABS
-// ============================================================
 function switchTeacherTab(tab) {
   document.querySelectorAll('#teacher-tab-bar .tab-btn').forEach(b=>{
     b.classList.toggle('active', b.dataset.tab===tab);
@@ -1176,33 +2286,17 @@ async function renderOverview() {
   const curMonth = monthStr();
   document.getElementById('t-total').textContent = students.length;
 
-  // today entries
   const todayEntries = students.filter(s=>journals[s.id+'_'+today]);
   document.getElementById('t-today').textContent = todayEntries.length;
   const pct = students.length ? Math.round(todayEntries.length/students.length*100) : 0;
   document.getElementById('t-pct').textContent = pct+'%';
   document.getElementById('t-prog-fill').style.width = pct+'%';
 
-  // avg points this month
   let allPts = [];
   students.forEach(s=>{
     Object.keys(journals).forEach(k=>{
       if (k.startsWith(s.id+'_') && k.includes(curMonth)) {
-        const entry = journals[k];
-        let pts = 0;
-        HABITS.forEach(h=>{
-          if (!entry[h.key]) return;
-          if (h.type==='dual') {
-            h.subHabits.forEach((sh,i)=>{
-              const opt = sh.options.find(o=>o.l===(entry[h.key]['sub_'+i]||''));
-              if (opt) pts += opt.p;
-            });
-          } else {
-            const opt = h.options.find(o=>o.l===(entry[h.key].selected||''));
-            if (opt) pts += opt.p;
-          }
-        });
-        allPts.push(pts);
+        allPts.push(calcEntryPts(journals[k]));
       }
     });
   });
@@ -1211,24 +2305,12 @@ async function renderOverview() {
   const perfect = allPts.filter(p=>p>=MAX_PTS).length;
   document.getElementById('t-perfect').textContent = perfect;
 
-  // leaderboard - total points this month per student
+  // Monthly leaderboard
   const lb = students.map(s=>{
     let total = 0;
     Object.keys(journals).forEach(k=>{
       if (k.startsWith(s.id+'_') && k.includes(curMonth)) {
-        const entry = journals[k];
-        HABITS.forEach(h=>{
-          if (!entry[h.key]) return;
-          if (h.type==='dual') {
-            h.subHabits.forEach((sh,i)=>{
-              const opt = sh.options.find(o=>o.l===(entry[h.key]['sub_'+i]||''));
-              if (opt) total += opt.p;
-            });
-          } else {
-            const opt = h.options.find(o=>o.l===(entry[h.key].selected||''));
-            if (opt) total += opt.p;
-          }
-        });
+        total += calcEntryPts(journals[k]);
       }
     });
     return {...s, totalPts: total};
@@ -1246,8 +2328,11 @@ async function renderOverview() {
     item.className = 'leader-item';
     item.innerHTML = `
       <div class="leader-rank ${rankClass}">${i+1}</div>
-      <div><div class="leader-name">${s.name}</div><div class="leader-class">Kelas ${s.kelas}</div></div>
-      <div class="leader-pts">${s.totalPts} poin</div>
+      <div class="leader-info">
+        <div class="leader-name">${s.name}</div>
+        <div class="leader-class">Kelas ${s.kelas}</div>
+      </div>
+      <div class="leader-pts">${s.totalPts} XP</div>
     `;
     ll.appendChild(item);
   });
@@ -1257,7 +2342,7 @@ async function renderOverview() {
 
 <script>
 // ============================================================
-// STUDENTS TAB
+// DATA SISWA (SEARCH/ADD/EDIT/DELETE)
 // ============================================================
 async function renderStudents(q) {
   const students = await getStudents();
@@ -1279,59 +2364,46 @@ async function renderStudents(q) {
   });
   
   tbody.innerHTML = '';
-  
   if (!filtered.length) {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:20px">Tidak ada siswa yang cocok dengan pencarian</td></tr>';
     return;
   }
   
   filtered.forEach((s,i)=>{
-    // calc total points (all time)
     let total = 0;
     Object.keys(journals).forEach(k=>{
-      if (!k.startsWith(s.id+'_')) return;
-      const entry = journals[k];
-      HABITS.forEach(h=>{
-        if (!entry[h.key]) return;
-        if (h.type==='dual') {
-          h.subHabits.forEach((sh,idx)=>{
-            const opt = sh.options.find(o=>o.l===(entry[h.key]['sub_'+idx]||''));
-            if (opt) total += opt.p;
-          });
-        } else {
-          const opt = h.options.find(o=>o.l===(entry[h.key].selected||''));
-          if (opt) total += opt.p;
-        }
-      });
+      if (k.startsWith(s.id+'_')) {
+        total += calcEntryPts(journals[k]);
+      }
     });
+    
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td style="text-align:center">${i+1}</td>
       <td class="student-name-cell">${s.name}</td>
       <td class="student-class-cell">${s.kelas}</td>
       <td style="text-align:center">${s.absen}</td>
-      <td style="letter-spacing:1px;font-family:monospace;text-align:center;font-weight:600;color:#1565C0">${s.pin}</td>
-      <td style="text-align:center"><strong style="color:#1565C0">${total}</strong></td>
+      <td style="letter-spacing:1px;font-family:monospace;text-align:center;font-weight:700;color:#3b82f6">${s.pin}</td>
+      <td style="text-align:center"><strong style="color:#fbbf24">${total} XP</strong></td>
       <td class="student-actions-cell">
-        <button class="btn-icon btn-edit" title="Edit" data-id="${s.id}"><i data-lucide="pencil" style="width:15px;height:15px"></i></button>
-        <button class="btn-icon btn-del" title="Hapus" data-id="${s.id}" data-name="${s.name}"><i data-lucide="trash-2" style="width:15px;height:15px"></i></button>
+        <button class="btn-icon btn-edit" title="Edit" data-id="${s.id}"><i data-lucide="pencil" style="width:14px;height:14px"></i></button>
+        <button class="btn-icon btn-del" title="Hapus" data-id="${s.id}" data-name="${s.name}"><i data-lucide="trash-2" style="width:14px;height:14px"></i></button>
       </td>
     `;
     tbody.appendChild(tr);
   });
-  // attach edit/delete via event delegation (within renderStudents so fresh)
+  
   tbody.querySelectorAll('.btn-edit').forEach(btn=>{
-    btn.addEventListener('click', async ()=>await openEditModal(btn.dataset.id));
+    btn.addEventListener('click', ()=>openEditModal(btn.dataset.id));
   });
   tbody.querySelectorAll('.btn-del').forEach(btn=>{
-    btn.addEventListener('click',()=>openDeleteModal(btn.dataset.id, btn.dataset.name));
+    btn.addEventListener('click',()=>{
+      openDeleteModal(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
+    });
   });
   lucide.createIcons();
 }
 
-// ============================================================
-// STUDENT MODAL (ADD/EDIT)
-// ============================================================
 function openAddModal() {
   document.getElementById('modal-student-title').textContent = 'Tambah Siswa';
   document.getElementById('modal-student-id').value = '';
@@ -1369,23 +2441,21 @@ async function saveStudentModal() {
   if (!kelas) { toast('Kelas tidak boleh kosong','error'); return; }
   if (!absen) { toast('No. absen tidak valid','error'); return; }
   if (!pin) { toast('Password tidak boleh kosong','error'); return; }
-  let students = await getStudents();
+  
+  let students = [...cachedStudents];
   if (id) {
     students = students.map(s=>s.id===id?{...s,name,kelas,absen,pin}:s);
-    toast('Data siswa berhasil diubah','success');
+    toast('Data pahlawan berhasil diubah','success');
   } else {
     students.push({id:uid(), name, kelas, absen, pin});
-    toast('Siswa berhasil ditambahkan','success');
+    toast('Pahlawan baru berhasil ditambahkan','success');
   }
   await saveStudents(students);
   closeStudentModal();
-  await renderStudents(document.getElementById('student-search').value);
-  await populateSelect();
+  renderStudents(document.getElementById('student-search').value);
+  populateSelect();
 }
 
-// ============================================================
-// DELETE MODAL
-// ============================================================
 function openDeleteModal(id, name) {
   deleteTargetId = id;
   document.getElementById('confirm-student-name').textContent = name;
@@ -1399,20 +2469,18 @@ function closeDeleteModal() {
 
 async function doDeleteStudent() {
   if (!deleteTargetId) return;
-  let students = await getStudents();
-  students = students.filter(s=>s.id!==deleteTargetId);
-  await saveStudents(students);
+  await deleteStudent(deleteTargetId);
   await deleteStudentJournals(deleteTargetId);
-  toast('Siswa berhasil dihapus','info');
+  toast('Pahlawan berhasil dihapus','info');
   closeDeleteModal();
-  await renderStudents(document.getElementById('student-search').value);
-  await populateSelect();
+  renderStudents(document.getElementById('student-search').value);
+  populateSelect();
 }
 </script>
 
 <script>
 // ============================================================
-// RECAP TAB
+// RECAP TAB FUNCTIONS
 // ============================================================
 async function populateRecapFilter() {
   const sel = document.getElementById('recap-student-filter');
@@ -1456,7 +2524,6 @@ async function filterRecap() {
 
   let rows = [];
   if (studentId) {
-    // single student
     Object.keys(journals).forEach(k=>{
       if (!k.startsWith(studentId+'_')) return;
       const date = k.replace(studentId+'_','');
@@ -1465,7 +2532,6 @@ async function filterRecap() {
       rows.push({studentId, date, pts, entry: journals[k]});
     });
   } else {
-    // all students
     students.forEach(s=>{
       Object.keys(journals).forEach(k=>{
         if (!k.startsWith(s.id+'_')) return;
@@ -1483,13 +2549,13 @@ async function filterRecap() {
   document.getElementById('recap-avg').textContent = avg;
 
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:20px">Tidak ada data</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:20px">Tidak ada data rekap</td></tr>';
     return;
   }
   rows.forEach(r=>{
     const g = grade(r.pts);
     const tr = document.createElement('tr');
-    const nameCell = r.studentName ? `<span style="font-weight:600">${r.studentName}</span> <span style="font-size:.75rem;color:#888">(${r.kelas})</span>` : '';
+    const nameCell = r.studentName ? `<span style="font-weight:800">${r.studentName}</span> <span style="font-size:.75rem;color:#888">(${r.kelas})</span>` : '';
     const detail = HABITS.map(h=>{
       if (!r.entry[h.key]) return null;
       if (h.type==='dual') {
@@ -1500,11 +2566,12 @@ async function filterRecap() {
       }
       return h.label+': '+(r.entry[h.key].selected||'?');
     }).filter(Boolean).join(' | ');
+    
     tr.innerHTML = `
       <td>${r.date}${nameCell?'<br>'+nameCell:''}</td>
-      <td><strong style="color:#1565C0">${r.pts}</strong></td>
+      <td><strong style="color:#fbbf24">${r.pts} XP</strong></td>
       <td><span class="grade-badge ${gradeClass(g)}">${g}</span></td>
-      <td style="font-size:.72rem;color:#666;max-width:200px;white-space:normal">${detail}</td>
+      <td style="font-size:.72rem;color:var(--text-muted);max-width:180px;white-space:normal">${detail}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -1551,42 +2618,42 @@ async function generatePDF() {
 
     const habitRows = habitAvgs.map(ha=>`
       <tr>
-        <td>${ha.label}</td>
-        <td>${ha.avg}/${ha.max}</td>
-        <td style="width:120px"><div style="background:#e0e7f5;border-radius:4px;height:8px"><div style="background:#1565C0;border-radius:4px;height:8px;width:${ha.pct}%"></div></div></td>
-        <td>${ha.pct}%</td>
+        <td style="padding:10px; border-bottom:1px solid #ddd">${ha.label}</td>
+        <td style="padding:10px; border-bottom:1px solid #ddd">${ha.avg}/${ha.max} XP</td>
+        <td style="padding:10px; border-bottom:1px solid #ddd; width:120px"><div style="background:#e0e7f5;border-radius:4px;height:8px"><div style="background:#1565C0;border-radius:4px;height:8px;width:${ha.pct}%"></div></div></td>
+        <td style="padding:10px; border-bottom:1px solid #ddd">${ha.pct}%</td>
       </tr>`).join('');
 
     const dailyRows = rows.map(r=>{
       const g2=grade(r.pts);
-      return `<tr><td>${r.date}</td><td>${r.pts}/${MAX_PTS}</td><td>${g2}</td></tr>`;
+      return `<tr><td style="padding:8px; border-bottom:1px solid #eee">${r.date}</td><td style="padding:8px; border-bottom:1px solid #eee">${r.pts}/${MAX_PTS} XP</td><td style="padding:8px; border-bottom:1px solid #eee">${g2}</td></tr>`;
     }).join('');
 
     pages += `
-    <div style="page-break-after:always;padding:32px;font-family:Arial,sans-serif;max-width:800px;margin:0 auto">
-      <div style="text-align:center;background:#1565C0;color:#fff;padding:16px;border-radius:10px;margin-bottom:20px">
-        <div style="font-size:1.3rem;font-weight:800">📒 Jurnal 7 Kebiasaan Anak</div>
+    <div style="page-break-after:always;padding:32px;font-family:Arial,sans-serif;max-width:800px;margin:0 auto;color:#333;">
+      <div style="text-align:center;background:#1e3a8a;color:#fff;padding:20px;border-radius:10px;margin-bottom:20px">
+        <div style="font-size:1.5rem;font-weight:800">📒 Laporan Petualangan Jurnal 7 Kebiasaan</div>
         <div style="font-size:.9rem;opacity:.85">Periode: ${month} | Dicetak: ${new Date().toLocaleDateString('id-ID')}</div>
       </div>
-      <div style="background:#f0f4ff;border-radius:10px;padding:16px;margin-bottom:16px;display:flex;gap:20px;flex-wrap:wrap">
+      <div style="background:#f3f4f6;border-radius:10px;padding:16px;margin-bottom:16px;display:flex;justify-content:space-between">
         <div><strong>Nama:</strong> ${s.name}</div>
         <div><strong>Kelas:</strong> ${s.kelas}</div>
-        <div><strong>No. Absen:</strong> ${s.absen}</div>
+        <div><strong>Absen:</strong> ${s.absen}</div>
       </div>
-      <div style="background:#fff;border:2px solid #1565C0;border-radius:10px;padding:16px;margin-bottom:16px;text-align:center">
-        <div style="font-size:.85rem;color:#666">Nilai Akhir</div>
-        <div style="font-size:3rem;font-weight:800;color:#1565C0">${g}</div>
+      <div style="background:#fff;border:3px solid #1e3a8a;border-radius:10px;padding:16px;margin-bottom:16px;text-align:center">
+        <div style="font-size:.85rem;color:#666">Level Pencapaian</div>
+        <div style="font-size:3.5rem;font-weight:800;color:#1e3a8a;margin:5px 0">${g}</div>
         <div style="font-size:1.2rem">${stars}</div>
-        <div style="font-size:.9rem;color:#555">Rata-rata: ${avgPts}/${MAX_PTS} poin dari ${rows.length} hari</div>
+        <div style="font-size:.9rem;color:#555">Rata-rata: ${avgPts}/${MAX_PTS} XP per hari (${rows.length} hari petualangan)</div>
       </div>
-      <div style="font-weight:700;margin-bottom:8px;color:#1565C0">Rata-rata Per Kebiasaan</div>
+      <div style="font-weight:700;margin-bottom:8px;color:#1e3a8a">Grafik Rata-rata Misi</div>
       <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:.88rem">
-        <thead><tr style="background:#e3f2fd"><th style="padding:8px;text-align:left">Kebiasaan</th><th>Rata-rata</th><th>Progress</th><th>%</th></tr></thead>
+        <thead><tr style="background:#e5e7eb"><th style="padding:10px;text-align:left">Misi Kebiasaan</th><th>Rata-rata</th><th>Kemajuan</th><th>%</th></tr></thead>
         <tbody>${habitRows}</tbody>
       </table>
-      <div style="font-weight:700;margin-bottom:8px;color:#1565C0">Detail Harian</div>
+      <div style="font-weight:700;margin-bottom:8px;color:#1e3a8a">Log Perjalanan Harian</div>
       <table style="width:100%;border-collapse:collapse;font-size:.88rem">
-        <thead><tr style="background:#e3f2fd"><th style="padding:8px;text-align:left">Tanggal</th><th>Poin</th><th>Nilai</th></tr></thead>
+        <thead><tr style="background:#e5e7eb"><th style="padding:8px;text-align:left">Tanggal</th><th>Poin XP</th><th>Level</th></tr></thead>
         <tbody>${dailyRows}</tbody>
       </table>
     </div>`;
@@ -1597,113 +2664,321 @@ async function generatePDF() {
   win.document.write(`<!DOCTYPE html><html><head><title>Rekap Jurnal</title>
     <style>body{margin:0}@media print{.no-print{display:none}}</style>
     </head><body>
-    <div class="no-print" style="text-align:center;padding:16px;background:#1565C0">
-      <button onclick="window.print()" style="padding:10px 24px;background:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;color:#1565C0">🖨️ Cetak / Simpan PDF</button>
+    <div class="no-print" style="text-align:center;padding:16px;background:#1e3a8a">
+      <button onclick="window.print()" style="padding:10px 24px;background:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;color:#1e3a8a">🖨️ Cetak / Simpan PDF</button>
     </div>
     ${pages}</body></html>`);
   win.document.close();
-  toast('PDF berhasil dibuat','success');
+  toast('PDF Laporan berhasil dibuat','success');
 }
 </script>
 
 <script>
 // ============================================================
-// INIT - ALL EVENT LISTENERS GO HERE
+// INITIALIZE & EVENTS CONTROL
 // ============================================================
 async function init() {
-  await seedDemoIfEmpty();
-  await populateSelect();
+  console.log('🚀 Loading application resources...');
+  
+  // Progress tracking helper
+  const setLoadProgress = (pct, statusText) => {
+    const bar = document.getElementById('opening-progress-bar');
+    const status = document.getElementById('opening-status');
+    if (bar) bar.style.width = pct + '%';
+    if (status) status.textContent = statusText;
+  };
+  
+  try {
+    setLoadProgress(15, 'Membuka gerbang data lokal...');
+    loadLocalCache();
+    
+    setLoadProgress(35, 'Menghubungkan ke Portal cloud...');
+    
+    // Connect and seed in background
+    let firestoreLoaded = false;
+    
+    // Give Firestore 1.5 seconds to respond, otherwise proceed with cache for instant loading
+    const dbPromise = new Promise(async (resolve) => {
+      // Check if firestore modules are ready
+      let attempts = 0;
+      const interval = setInterval(async () => {
+        attempts++;
+        if (window.firestoreDb) {
+          clearInterval(interval);
+          try {
+            const { collection, getDocs, orderBy, query } = window.firestoreModules;
+            
+            // Sync cloud data
+            const [studentsSnapshot, journalsSnapshot] = await Promise.all([
+              getDocs(query(collection(window.firestoreDb, 'students'), orderBy('name'))),
+              getDocs(collection(window.firestoreDb, 'journals'))
+            ]);
+            
+            const students = [];
+            studentsSnapshot.forEach(doc => {
+              students.push({ id: doc.id, ...doc.data() });
+            });
+            
+            const journals = {};
+            journalsSnapshot.forEach(doc => {
+              journals[doc.id] = doc.data();
+            });
+            
+            if (students.length > 0) {
+              cachedStudents = students;
+            }
+            cachedJournals = journals;
+            saveLocalCache();
+            firestoreLoaded = true;
+            console.log('✅ Online Firestore sync completed');
+          } catch (e) {
+            console.warn('Firestore load failed, using local cache:', e);
+          }
+          resolve(true);
+        } else if (attempts > 15) {
+          // Timeout after 1.5s
+          clearInterval(interval);
+          resolve(false);
+        }
+      }, 100);
+    });
+    
+    await Promise.race([dbPromise, new Promise(r => setTimeout(r, 1500))]);
+    
+    setLoadProgress(70, firestoreLoaded ? 'Sinkronisasi Cloud Berhasil!' : 'Portal offline, menggunakan cache lokal');
+    
+    setupEventListeners();
+    await seedDemoIfEmpty();
+    await populateSelect();
+    
+    setLoadProgress(100, 'Petualangan Siap!');
+    isDataLoaded = true;
+    
+    // Auto redirect after loading
+    setTimeout(() => {
+      showPage('page-login');
+    }, 800);
+    
+  } catch(e) {
+    console.error('❌ Loading error:', e);
+    setLoadProgress(100, 'Gagal terhubung, masuk darurat...');
+    isDataLoaded = true;
+    setTimeout(() => {
+      showPage('page-login');
+    }, 1500);
+  }
+}
+
+function setupEventListeners() {
+  console.log('📌 Binding game events...');
+  
+  // Start Game Button click
+  const btnStartGame = document.getElementById('btn-start-game');
+  if (btnStartGame) {
+    btnStartGame.addEventListener('click', () => {
+      showPage('page-login');
+    });
+  }
 
   // Student login
-  document.getElementById('btn-student-login').addEventListener('click', doStudentLogin);
-  document.getElementById('login-pin').addEventListener('keypress', (e)=>{
-    if (e.key==='Enter') doStudentLogin();
-  });
-  document.getElementById('link-teacher-login').addEventListener('click', ()=>{
-    showPage('page-teacher');
-    document.getElementById('teacher-pin-input').value = '';
-    document.getElementById('teacher-gate').classList.remove('hidden');
-    document.getElementById('teacher-panel').classList.add('hidden');
-  });
+  const btnStudentLogin = document.getElementById('btn-student-login');
+  const loginPin = document.getElementById('login-pin');
+  const linkTeacherLogin = document.getElementById('link-teacher-login');
+  
+  if (btnStudentLogin) btnStudentLogin.addEventListener('click', doStudentLogin);
+  if (loginPin) {
+    loginPin.addEventListener('keypress', (e)=>{
+      if (e.key==='Enter') doStudentLogin();
+    });
+  }
+  
+  if (linkTeacherLogin) {
+    linkTeacherLogin.addEventListener('click', ()=>{
+      showPage('page-teacher');
+      const teacherPinInput = document.getElementById('teacher-pin-input');
+      if (teacherPinInput) teacherPinInput.value = '';
+      document.getElementById('teacher-gate').classList.remove('hidden');
+      document.getElementById('teacher-panel').classList.add('hidden');
+    });
+  }
 
   // Journal page
-  document.getElementById('btn-journal-logout').addEventListener('click', ()=>{
-    currentStudent = null;
-    entryData = {};
-    showPage('page-login');
-    document.getElementById('login-pin').value = '';
-  });
-  document.getElementById('entry-date').addEventListener('change', async (e)=>{
-    await loadEntryData(e.target.value);
-    buildHabitGrid();
-  });
-  document.getElementById('btn-save-journal').addEventListener('click', doSaveJournal);
+  const btnJournalLogout = document.getElementById('btn-journal-logout');
+  const entryDate = document.getElementById('entry-date');
+  const btnSaveJournal = document.getElementById('btn-save-journal');
+  
+  if (btnJournalLogout) {
+    btnJournalLogout.addEventListener('click', ()=>{
+      currentStudent = null;
+      entryData = {};
+      showPage('page-login');
+      const loginPinField = document.getElementById('login-pin');
+      if (loginPinField) loginPinField.value = '';
+    });
+  }
+  
+  if (entryDate) {
+    entryDate.addEventListener('change', async (e)=>{
+      await loadEntryData(e.target.value);
+      buildHabitGrid();
+    });
+  }
+  if (btnSaveJournal) btnSaveJournal.addEventListener('click', doSaveJournal);
 
-  // Popup
-  document.getElementById('popup-close-btn').addEventListener('click', closePopup);
-  document.getElementById('btn-confirm-popup').addEventListener('click', confirmPopup);
-  document.getElementById('popup-habit').addEventListener('click', (e)=>{
-    if (e.target.id==='popup-habit') closePopup();
-  });
+  // Popup closure
+  const popupCloseBtn = document.getElementById('popup-close-btn');
+  const btnConfirmPopup = document.getElementById('btn-confirm-popup');
+  const popupHabit = document.getElementById('popup-habit');
+  
+  if (popupCloseBtn) popupCloseBtn.addEventListener('click', closePopup);
+  if (btnConfirmPopup) btnConfirmPopup.addEventListener('click', confirmPopup);
+  if (popupHabit) {
+    popupHabit.addEventListener('click', (e)=>{
+      if (e.target.id==='popup-habit') closePopup();
+    });
+  }
 
   // Teacher gate
-  document.getElementById('btn-teacher-pin-login').addEventListener('click', doTeacherLogin);
-  document.getElementById('teacher-pin-input').addEventListener('keypress', (e)=>{
-    if (e.key==='Enter') doTeacherLogin();
-  });
-  document.getElementById('btn-back-to-student').addEventListener('click', ()=>{
-    showPage('page-login');
-    document.getElementById('teacher-pin-input').value = '';
-  });
+  const btnTeacherPinLogin = document.getElementById('btn-teacher-pin-login');
+  const teacherPinInput = document.getElementById('teacher-pin-input');
+  const btnBackToStudent = document.getElementById('btn-back-to-student');
+  
+  if (btnTeacherPinLogin) btnTeacherPinLogin.addEventListener('click', doTeacherLogin);
+  if (teacherPinInput) {
+    teacherPinInput.addEventListener('keypress', (e)=>{
+      if (e.key==='Enter') doTeacherLogin();
+    });
+  }
+  if (btnBackToStudent) {
+    btnBackToStudent.addEventListener('click', ()=>{
+      showPage('page-login');
+      if (teacherPinInput) teacherPinInput.value = '';
+    });
+  }
 
   // Teacher panel
-  document.getElementById('btn-teacher-logout').addEventListener('click', doTeacherLogout);
-  document.querySelectorAll('#teacher-tab-bar .tab-btn').forEach(btn=>{
+  const btnTeacherLogout = document.getElementById('btn-teacher-logout');
+  if (btnTeacherLogout) btnTeacherLogout.addEventListener('click', doTeacherLogout);
+  
+  const teacherTabBtns = document.querySelectorAll('#teacher-tab-bar .tab-btn');
+  teacherTabBtns.forEach(btn=>{
     btn.addEventListener('click', ()=>switchTeacherTab(btn.dataset.tab));
   });
 
-  // Students tab
-  document.getElementById('student-search').addEventListener('input', (e)=>{
-    renderStudents(e.target.value);
-  });
-  document.getElementById('btn-add-student').addEventListener('click', openAddModal);
+  // Students tab search
+  const studentSearch = document.getElementById('student-search');
+  const btnAddStudent = document.getElementById('btn-add-student');
+  if (studentSearch) {
+    studentSearch.addEventListener('input', (e)=>{
+      renderStudents(e.target.value);
+    });
+  }
+  if (btnAddStudent) btnAddStudent.addEventListener('click', openAddModal);
 
-  // Student modal
-  document.getElementById('btn-modal-student-cancel').addEventListener('click', closeStudentModal);
-  document.getElementById('btn-cancel-student2').addEventListener('click', closeStudentModal);
-  document.getElementById('btn-modal-student-save').addEventListener('click', saveStudentModal);
-  document.getElementById('modal-student').addEventListener('click', (e)=>{
-    if (e.target.id==='modal-student') closeStudentModal();
-  });
+  // Student form modal
+  const btnModalStudentCancel = document.getElementById('btn-modal-student-cancel');
+  const btnModalStudentSave = document.getElementById('btn-modal-student-save');
+  const modalStudent = document.getElementById('modal-student');
+  
+  if (btnModalStudentCancel) btnModalStudentCancel.addEventListener('click', closeStudentModal);
+  if (btnModalStudentSave) btnModalStudentSave.addEventListener('click', saveStudentModal);
+  if (modalStudent) {
+    modalStudent.addEventListener('click', (e)=>{
+      if (e.target.id==='modal-student') closeStudentModal();
+    });
+  }
 
   // Delete modal
-  document.getElementById('btn-confirm-cancel').addEventListener('click', closeDeleteModal);
-  document.getElementById('btn-confirm-delete').addEventListener('click', doDeleteStudent);
-  document.getElementById('modal-confirm').addEventListener('click', (e)=>{
-    if (e.target.id==='modal-confirm') closeDeleteModal();
-  });
+  const btnConfirmCancel = document.getElementById('btn-confirm-cancel');
+  const btnConfirmDelete = document.getElementById('btn-confirm-delete');
+  const modalConfirm = document.getElementById('modal-confirm');
+  
+  if (btnConfirmCancel) btnConfirmCancel.addEventListener('click', closeDeleteModal);
+  if (btnConfirmDelete) btnConfirmDelete.addEventListener('click', doDeleteStudent);
+  if (modalConfirm) {
+    modalConfirm.addEventListener('click', (e)=>{
+      if (e.target.id==='modal-confirm') closeDeleteModal();
+    });
+  }
 
   // Honesty modal
-  document.getElementById('honesty-checkbox').addEventListener('change', (e)=>{
-    document.getElementById('btn-honesty-confirm').disabled = !e.target.checked;
-  });
-  document.getElementById('btn-honesty-cancel').addEventListener('click', closeHonestyModal);
-  document.getElementById('btn-honesty-confirm').addEventListener('click', confirmSaveJournal);
-  document.getElementById('modal-honesty').addEventListener('click', (e)=>{
-    if (e.target.id==='modal-honesty') closeHonestyModal();
-  });
+  const honestyCheckbox = document.getElementById('honesty-checkbox');
+  const btnHonestyCancel = document.getElementById('btn-honesty-cancel');
+  const btnHonestyConfirm = document.getElementById('btn-honesty-confirm');
+  const modalHonesty = document.getElementById('modal-honesty');
+  
+  if (honestyCheckbox) {
+    honestyCheckbox.addEventListener('change', (e)=>{
+      if (btnHonestyConfirm) {
+        btnHonestyConfirm.disabled = !e.target.checked;
+      }
+    });
+  }
+  if (btnHonestyCancel) btnHonestyCancel.addEventListener('click', closeHonestyModal);
+  if (btnHonestyConfirm) btnHonestyConfirm.addEventListener('click', confirmSaveJournal);
+  if (modalHonesty) {
+    modalHonesty.addEventListener('click', (e)=>{
+      if (e.target.id==='modal-honesty') closeHonestyModal();
+    });
+  }
 
-  // Recap tab
-  document.getElementById('recap-student-filter').addEventListener('change', filterRecap);
-  document.getElementById('recap-month-filter').addEventListener('change', filterRecap);
-  document.getElementById('btn-download-pdf').addEventListener('click', generatePDF);
+  // Recap tab filters
+  const recapStudentFilter = document.getElementById('recap-student-filter');
+  const recapMonthFilter = document.getElementById('recap-month-filter');
+  const btnDownloadPdf = document.getElementById('btn-download-pdf');
+  
+  if (recapStudentFilter) recapStudentFilter.addEventListener('change', filterRecap);
+  if (recapMonthFilter) recapMonthFilter.addEventListener('change', filterRecap);
+  if (btnDownloadPdf) btnDownloadPdf.addEventListener('click', generatePDF);
 
-  lucide.createIcons();
+  console.log('✅ Bindings successfully registered');
 }
 
-document.addEventListener('DOMContentLoaded', ()=>{
-  try { init(); }
-  catch(e) { console.error('Init error:', e); alert('Error: '+e.message); }
+// Trigger initialization on DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    showPage('page-opening');
+    init();
+  });
+} else {
+  showPage('page-opening');
+  init();
+}
+
+// Sync Firebase load event
+window.addEventListener('firestore-ready', async () => {
+  console.log('🔄 Firestore sync trigger: syncing cloud...');
+  if (window.firestoreDb) {
+    try {
+      const { collection, getDocs, orderBy, query } = window.firestoreModules;
+      const studentsSnapshot = await getDocs(query(collection(window.firestoreDb, 'students'), orderBy('name')));
+      const journalsSnapshot = await getDocs(collection(window.firestoreDb, 'journals'));
+      
+      const students = [];
+      studentsSnapshot.forEach(doc => {
+        students.push({ id: doc.id, ...doc.data() });
+      });
+      
+      const journals = {};
+      journalsSnapshot.forEach(doc => {
+        journals[doc.id] = doc.data();
+      });
+      
+      if (students.length > 0) {
+        cachedStudents = students;
+      }
+      cachedJournals = journals;
+      saveLocalCache();
+      
+      // Quietly update current screen components if active
+      if (document.getElementById('page-login').classList.contains('active')) {
+        populateSelect();
+      }
+      console.log('🔄 Background Firestore sync done');
+    } catch(e) {
+      console.warn('Background sync failed:', e);
+    }
+  }
 });
 </script>
 </body>
