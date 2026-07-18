@@ -1958,6 +1958,10 @@ tbody tr:last-child td { border-bottom: none; }
   box-shadow: 0 0 20px rgba(255,212,90,0.2);
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
 .loading-text {
   color: var(--text-dark);
   margin-top: 16px;
@@ -2196,6 +2200,13 @@ i[data-lucide] svg, i[data-lucide] .lucide {
         </button>
         <i data-lucide="layout-dashboard" style="width:22px;height:22px;color:#fff"></i>
         <div class="teacher-topbar-title">Panel Guru Petualangan</div>
+        <div style="font-size: 0.65rem; color: #10b981; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;" id="sync-status">
+          <span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%; display: inline-block; animation: pulse 2s infinite;"></span>
+          SYNCED
+        </div>
+        <button class="btn-game btn-game-cyan" id="btn-teacher-sync" title="Sinkronisasi ulang data dari cloud" style="padding: 8px 12px; font-size: 0.85rem;">
+          <i data-lucide="refresh-cw" style="width:14px;height:14px"></i>
+        </button>
         <button class="btn-game btn-game-red btn-teacher-logout" id="btn-teacher-logout">
           <i data-lucide="log-out" style="width:14px;height:14px"></i> Keluar
         </button>
@@ -2503,10 +2514,13 @@ function normalizeStudentsPayload(students) {
   return students.reduce((acc, student) => {
     if (!student || !student.id) return acc;
     acc[student.id] = {
+      id: student.id,
       name: student.name,
       kelas: student.kelas,
       absen: student.absen,
-      pin: student.pin
+      pin: student.pin,
+      createdAt: student.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     return acc;
   }, {});
@@ -2566,15 +2580,29 @@ async function saveStudents(students) {
   cachedStudents = students;
   saveLocalCache();
   
-  if (!window.rtdb) return;
+  if (!window.rtdb) {
+    console.warn('⚠️ Firebase tidak tersedia, hanya menyimpan lokal');
+    toast('⚠️ Offline: Data disimpan lokal (belum di cloud)', 'warning');
+    return false;
+  }
   
   try {
     const { ref, set } = window.rtdbModules;
     const payload = normalizeStudentsPayload(students);
+    
+    console.log(`📤 Uploading ${students.length} students to Firebase...`);
+    
+    // Upload ke Firebase
     await set(ref(window.rtdb, 'students'), payload);
-    console.log('✅ Students synced to RTDB');
+    console.log(`✅ ${students.length} Students successfully synced to Firebase`);
+    
+    // Trigger UI refresh
+    refreshActiveViews();
+    return true;
   } catch(e) {
-    console.error('Error in saveStudents:', e);
+    console.error('❌ Error saving students to Firebase:', e);
+    toast('❌ Data tersimpan lokal tapi gagal ke cloud - cek koneksi', 'error');
+    return false;
   }
 }
 
@@ -2582,14 +2610,24 @@ async function deleteStudent(studentId) {
   cachedStudents = cachedStudents.filter(s => s.id !== studentId);
   saveLocalCache();
   
-  if (!window.rtdb) return;
+  if (!window.rtdb) {
+    console.warn('⚠️ Firebase tidak tersedia');
+    return;
+  }
   
   try {
     const { ref, remove } = window.rtdbModules;
+    
+    // Hapus siswa dari database
     await remove(ref(window.rtdb, 'students/' + studentId));
-    console.log('✅ Student deleted from RTDB');
+    console.log('✅ Student successfully deleted from Firebase');
+    
+    // Hapus semua jurnal siswa dari database
+    await deleteStudentJournals(studentId);
+    
   } catch(e) {
-    console.error('Error deleting student:', e);
+    console.error('❌ Error deleting student from Firebase:', e);
+    toast('Gagal menghapus di cloud', 'error');
   }
 }
 
@@ -2605,22 +2643,32 @@ async function saveJournalEntry(studentId, date, entryData) {
   cachedJournals[key] = entryData;
   saveLocalCache();
   
-  if (!window.rtdb) return;
+  if (!window.rtdb) {
+    console.warn('⚠️ Firebase tidak tersedia, hanya lokal');
+    return;
+  }
   
   try {
     const { ref, set } = window.rtdbModules;
-    set(ref(window.rtdb, 'journals/' + key), {
+    const payload = {
       studentId: studentId,
       date: date,
       ...entryData,
-      updatedAt: new Date().toISOString()
-    }).then(() => {
-      console.log('✅ Journal entry saved to RTDB');
-    }).catch((e) => {
-      console.error('Error saving journal entry to RTDB:', e);
-    });
+      updatedAt: new Date().toISOString(),
+      syncedAt: new Date().toISOString()
+    };
+    
+    // Simpan ke Firebase
+    await set(ref(window.rtdb, 'journals/' + key), payload);
+    console.log('✅ Journal entry saved to Firebase:', key);
+    
+    // Refresh UI
+    refreshActiveViews();
+    return true;
   } catch(e) {
-    console.error('Error preparing journal entry save:', e);
+    console.error('❌ Error saving journal entry:', e);
+    toast('Jurnal tersimpan lokal tapi gagal ke cloud', 'warning');
+    return false;
   }
 }
 
@@ -2629,16 +2677,20 @@ async function deleteJournalEntry(studentId, date) {
   delete cachedJournals[key];
   saveLocalCache();
   
-  if (!window.rtdb) return;
+  if (!window.rtdb) {
+    console.warn('⚠️ Firebase tidak tersedia');
+    return;
+  }
   
   try {
     const { ref, remove } = window.rtdbModules;
     await remove(ref(window.rtdb, 'journals/' + key));
-    console.log('✅ Journal entry deleted from RTDB');
-    toast('Jurnal berhasil dihapus', 'info');
+    console.log('✅ Journal entry deleted from Firebase');
+    toast('Jurnal berhasil dihapus', 'success');
+    refreshActiveViews();
   } catch(e) {
-    console.error('Error deleting journal entry from RTDB:', e);
-    toast('Gagal menghapus di database', 'error');
+    console.error('❌ Error deleting journal entry:', e);
+    toast('Gagal menghapus di cloud', 'error');
   }
 }
 
@@ -2652,15 +2704,21 @@ async function deleteStudentJournals(studentId) {
   });
   saveLocalCache();
   
-  if (!window.rtdb) return;
+  if (!window.rtdb || keysToDelete.length === 0) {
+    return;
+  }
   
   try {
     const { ref, remove } = window.rtdbModules;
-    const deletePromises = keysToDelete.map(k => remove(ref(window.rtdb, 'journals/' + k)));
-    await Promise.all(deletePromises);
-    console.log('✅ Student journals deleted from RTDB');
+    
+    // Delete each journal entry
+    for (const key of keysToDelete) {
+      await remove(ref(window.rtdb, 'journals/' + key));
+    }
+    
+    console.log(`✅ ${keysToDelete.length} journal entries deleted for student`);
   } catch(e) {
-    console.error('Error deleting student journals:', e);
+    console.error('❌ Error deleting student journals:', e);
   }
 }
 
@@ -3388,23 +3446,57 @@ async function saveStudentModal() {
   const kelas = document.getElementById('modal-student-class').value.trim();
   const absen = parseInt(document.getElementById('modal-student-number').value)||0;
   const pin = document.getElementById('modal-student-pin').value.trim();
+  
   if (!name) { toast('Nama tidak boleh kosong','error'); return; }
   if (!kelas) { toast('Kelas tidak boleh kosong','error'); return; }
   if (!absen) { toast('No. absen tidak valid','error'); return; }
   if (!pin) { toast('Password tidak boleh kosong','error'); return; }
   
-  let students = [...cachedStudents];
-  if (id) {
-    students = students.map(s=>s.id===id?{...s,name,kelas,absen,pin}:s);
-    toast('Data pahlawan berhasil diubah','success');
-  } else {
-    students.push({id:uid(), name, kelas, absen, pin});
-    toast('Pahlawan baru berhasil ditambahkan','success');
+  showLoading('Menyimpan data siswa...');
+  try {
+    let students = [...cachedStudents];
+    
+    if (id) {
+      // Edit siswa yang sudah ada
+      students = students.map(s => {
+        if (s.id === id) {
+          return {
+            ...s,
+            name,
+            kelas,
+            absen,
+            pin,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return s;
+      });
+      toast('Data pahlawan berhasil diubah','success');
+    } else {
+      // Tambah siswa baru
+      const now = new Date().toISOString();
+      students.push({
+        id: uid(),
+        name,
+        kelas,
+        absen,
+        pin,
+        createdAt: now,
+        updatedAt: now
+      });
+      toast('Pahlawan baru berhasil ditambahkan','success');
+    }
+    
+    await saveStudents(students);
+    closeStudentModal();
+    renderStudents(document.getElementById('student-search').value);
+    populateSelect();
+  } catch(e) {
+    console.error('Error saving student:', e);
+    toast('Gagal menyimpan data siswa', 'error');
+  } finally {
+    hideLoading();
   }
-  await saveStudents(students);
-  closeStudentModal();
-  renderStudents(document.getElementById('student-search').value);
-  populateSelect();
 }
 
 function openDeleteModal(id, name) {
@@ -3420,12 +3512,20 @@ function closeDeleteModal() {
 
 async function doDeleteStudent() {
   if (!deleteTargetId) return;
-  await deleteStudent(deleteTargetId);
-  await deleteStudentJournals(deleteTargetId);
-  toast('Pahlawan berhasil dihapus','info');
-  closeDeleteModal();
-  renderStudents(document.getElementById('student-search').value);
-  populateSelect();
+  
+  showLoading('Menghapus siswa...');
+  try {
+    await deleteStudent(deleteTargetId);
+    toast('Pahlawan berhasil dihapus','success');
+    closeDeleteModal();
+    renderStudents(document.getElementById('student-search').value);
+    populateSelect();
+  } catch(e) {
+    console.error('Error deleting student:', e);
+    toast('Gagal menghapus siswa', 'error');
+  } finally {
+    hideLoading();
+  }
 }
 </script>
 
@@ -3917,6 +4017,144 @@ async function generatePDF() {
 
 <script>
 // ============================================================
+// Real-time listener unsubscribers
+let unsubStudents = null;
+let unsubJournals = null;
+let syncStatusTimeout = null;
+
+// Update sync status indicator
+function updateSyncStatus(status = 'SYNCED', color = '#10b981') {
+  const statusEl = document.getElementById('sync-status');
+  if (!statusEl) return;
+  
+  // Clear previous timeout
+  if (syncStatusTimeout) clearTimeout(syncStatusTimeout);
+  
+  const dot = statusEl.querySelector('span');
+  if (dot) {
+    dot.style.background = color;
+    if (status === 'SYNCING') {
+      dot.style.animation = 'pulse 1s infinite';
+    } else {
+      dot.style.animation = 'pulse 2s infinite';
+    }
+  }
+  
+  statusEl.textContent = '';
+  const dotEl = document.createElement('span');
+  dotEl.style.width = '6px';
+  dotEl.style.height = '6px';
+  dotEl.style.background = color;
+  dotEl.style.borderRadius = '50%';
+  dotEl.style.display = 'inline-block';
+  dotEl.style.animation = status === 'SYNCING' ? 'pulse 1s infinite' : 'pulse 2s infinite';
+  statusEl.appendChild(dotEl);
+  
+  const textEl = document.createElement('span');
+  textEl.textContent = status;
+  statusEl.appendChild(textEl);
+  
+  // Auto-revert to SYNCED after 3 seconds if needed
+  if (status === 'SYNCING') {
+    syncStatusTimeout = setTimeout(() => {
+      updateSyncStatus('SYNCED', '#10b981');
+    }, 3000);
+  }
+}
+
+// Setup Firebase real-time listeners
+async function setupRealTimeListeners() {
+  if (!window.rtdb || !window.rtdbModules) {
+    console.warn('⚠️ Firebase RTDB tidak tersedia');
+    updateSyncStatus('OFFLINE', '#ef4444');
+    return false;
+  }
+
+  try {
+    const { ref, onValue } = window.rtdbModules;
+    
+    // Unsubscribe dari listener lama jika ada
+    if (unsubStudents) unsubStudents();
+    if (unsubJournals) unsubJournals();
+    
+    console.log('🔄 Memasang real-time listeners untuk students...');
+    unsubStudents = onValue(ref(window.rtdb, 'students'), (snap) => {
+      const newStudents = buildStudentsArrayFromSnapshot(snap.val());
+      console.log(`📥 Siswa diperbarui dari Firebase: ${newStudents.length} siswa`);
+      cachedStudents = newStudents;
+      saveLocalCache();
+      refreshActiveViews();
+    }, (error) => {
+      console.error('❌ Error listening to students:', error);
+    });
+    
+    console.log('🔄 Memasang real-time listeners untuk journals...');
+    unsubJournals = onValue(ref(window.rtdb, 'journals'), (snap) => {
+      cachedJournals = snap.val() || {};
+      console.log(`📥 Jurnal diperbarui dari Firebase: ${Object.keys(cachedJournals).length} entries`);
+      saveLocalCache();
+      refreshActiveViews();
+    }, (error) => {
+      console.error('❌ Error listening to journals:', error);
+    });
+    
+    console.log('✅ Real-time listeners siap!');
+    updateSyncStatus('SYNCED', '#10b981');
+    return true;
+  } catch(e) {
+    console.error('❌ Error setting up real-time listeners:', e);
+    updateSyncStatus('ERROR', '#ef4444');
+    return false;
+  }
+}
+
+// Force sync data dari Firebase
+async function forceSyncFromFirebase() {
+  if (!window.rtdb || !window.rtdbModules) {
+    console.warn('⚠️ Firebase tidak tersedia, skip sync');
+    updateSyncStatus('OFFLINE', '#ef4444');
+    return false;
+  }
+
+  try {
+    updateSyncStatus('SYNCING', '#f59e0b');
+    const { ref, get, child } = window.rtdbModules;
+    const dbRef = ref(window.rtdb);
+    
+    console.log('🔄 Force syncing semua data dari Firebase...');
+    const snapshot = await get(child(dbRef, '/'));
+    
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      
+      if (data && data.students) {
+        cachedStudents = buildStudentsArrayFromSnapshot(data.students);
+        console.log(`✅ Sync: ${cachedStudents.length} siswa dari Firebase`);
+      } else {
+        cachedStudents = [];
+      }
+      
+      if (data && data.journals) {
+        cachedJournals = data.journals;
+        console.log(`✅ Sync: ${Object.keys(cachedJournals).length} jurnal dari Firebase`);
+      } else {
+        cachedJournals = {};
+      }
+      
+      saveLocalCache();
+      refreshActiveViews();
+      updateSyncStatus('SYNCED', '#10b981');
+      return true;
+    } else {
+      console.log('ℹ️ Tidak ada data di Firebase');
+      return false;
+    }
+  } catch(e) {
+    console.error('❌ Error force syncing:', e);
+    return false;
+  }
+}
+
 // INITIALIZE & EVENTS CONTROL
 // ============================================================
 async function init() {
@@ -3936,69 +4174,41 @@ async function init() {
     
     setLoadProgress(35, 'Menghubungkan ke Portal cloud...');
     
-    // Connect and seed in background
-    let rtdbLoaded = false;
+    // Wait for Firebase to be ready
+    let rtdbReady = false;
+    let attempts = 0;
+    while (!window.rtdb && attempts < 50) {
+      await new Promise(r => setTimeout(r, 100));
+      attempts++;
+    }
     
-    // Give RTDB 1.5 seconds to respond, otherwise proceed with cache for instant loading
-    const dbPromise = new Promise(async (resolve) => {
-      // Check if rtdb modules are ready
-      let attempts = 0;
-      const interval = setInterval(async () => {
-        attempts++;
-        if (window.rtdb) {
-          clearInterval(interval);
-          try {
-            const { ref, get, child, onValue } = window.rtdbModules;
-            const dbRef = ref(window.rtdb);
-            
-            // Sync cloud data initially
-            const snapshot = await get(child(dbRef, '/'));
-            if (snapshot.exists()) {
-              const data = snapshot.val();
-              if (data && data.students) {
-                cachedStudents = buildStudentsArrayFromSnapshot(data.students);
-              } else {
-                cachedStudents = [];
-              }
-              cachedJournals = data && data.journals ? data.journals : {};
-              saveLocalCache();
-            }
-            
-            rtdbLoaded = true;
-            console.log('✅ Online RTDB sync completed');
-            
-            // Set up real-time listeners
-            onValue(ref(window.rtdb, 'students'), (snap) => {
-              cachedStudents = buildStudentsArrayFromSnapshot(snap.val());
-              saveLocalCache();
-              refreshActiveViews();
-            });
-            
-            onValue(ref(window.rtdb, 'journals'), (snap) => {
-              cachedJournals = snap.val() || {};
-              saveLocalCache();
-              refreshActiveViews();
-            });
-            
-          } catch (e) {
-            console.warn('RTDB load failed, using local cache:', e);
-          }
-          resolve(true);
-        } else if (attempts > 15) {
-          // Timeout after 1.5s
-          clearInterval(interval);
-          resolve(false);
-        }
-      }, 100);
-    });
+    if (window.rtdb) {
+      setLoadProgress(50, 'Sinkronisasi data dari cloud...');
+      
+      // Force sync data dari Firebase terlebih dahulu
+      rtdbReady = await forceSyncFromFirebase();
+      
+      if (rtdbReady) {
+        setLoadProgress(75, 'Memasang real-time listeners...');
+        
+        // Setup real-time listeners untuk update otomatis
+        await setupRealTimeListeners();
+      }
+    }
     
-    await Promise.race([dbPromise, new Promise(r => setTimeout(r, 1500))]);
-    
-    setLoadProgress(70, rtdbLoaded ? 'Sinkronisasi Cloud Berhasil!' : 'Portal offline, menggunakan cache lokal');
+    setLoadProgress(70, rtdbReady ? 'Sinkronisasi Cloud Berhasil!' : 'Portal offline, menggunakan cache lokal');
     
     setupEventListeners();
     await seedDemoIfEmpty();
     await populateSelect();
+    
+    // Setup auto-sync interval - re-sync setiap 30 detik untuk memastikan data tetap sinkron
+    setInterval(async () => {
+      if (window.rtdb && document.hidden === false) {
+        console.log('🔄 Auto-sync berkala...');
+        await forceSyncFromFirebase();
+      }
+    }, 30000); // 30 detik
     
     setLoadProgress(100, '7 Kebiasaan Siap!');
     isDataLoaded = true;
@@ -4108,8 +4318,25 @@ function setupEventListeners() {
   // Teacher panel
   const btnTeacherLogout = document.getElementById('btn-teacher-logout');
   const btnTeacherBack = document.getElementById('btn-teacher-back');
+  const btnTeacherSync = document.getElementById('btn-teacher-sync');
+  
   if (btnTeacherLogout) btnTeacherLogout.addEventListener('click', doTeacherLogout);
   if (btnTeacherBack) btnTeacherBack.addEventListener('click', ()=>switchTeacherTab('overview'));
+  
+  if (btnTeacherSync) {
+    btnTeacherSync.addEventListener('click', async ()=>{
+      btnTeacherSync.disabled = true;
+      showLoading('Sinkronisasi data dari cloud...');
+      const success = await forceSyncFromFirebase();
+      hideLoading();
+      if (success) {
+        toast('Data berhasil disinkronisasi! 🔄', 'success');
+      } else {
+        toast('Gagal sinkronisasi (offline atau error)', 'error');
+      }
+      btnTeacherSync.disabled = false;
+    });
+  }
   
   const teacherTabBtns = document.querySelectorAll('#teacher-tab-bar .tab-btn');
   teacherTabBtns.forEach(btn=>{
