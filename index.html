@@ -2465,16 +2465,24 @@ const HABITS = [
 
 const MAX_PTS = HABITS.reduce((a,h)=>a+h.maxPts,0); // 40
 const LS_KEY = 'jurnal7kb';
-let TEACHER_PIN = localStorage.getItem('teacherPin') || '1234';
-let TEACHER_NAME = localStorage.getItem('teacherName') || 'Panel Guru Petualangan';
-let TEACHER_NIP = localStorage.getItem('teacherNip') || '';
-let SCHOOL_YEAR = localStorage.getItem('schoolYear') || '';
-let CITY_NAME = localStorage.getItem('cityName') || '';
+let teacherProfile = {
+  teacherPin: localStorage.getItem('teacherPin') || '1234',
+  teacherName: localStorage.getItem('teacherName') || 'Panel Guru Petualangan',
+  teacherNip: localStorage.getItem('teacherNip') || '',
+  schoolYear: localStorage.getItem('schoolYear') || '',
+  cityName: localStorage.getItem('cityName') || ''
+};
+let TEACHER_PIN = teacherProfile.teacherPin;
+let TEACHER_NAME = teacherProfile.teacherName;
+let TEACHER_NIP = teacherProfile.teacherNip;
+let SCHOOL_YEAR = teacherProfile.schoolYear;
+let CITY_NAME = teacherProfile.cityName;
 
 let currentStudent = null;
 let entryData = {};
 let currentPopupHabit = null;
 let deleteTargetId = null;
+let unsubSettings = null;
 
 // ============================================================
 // DATA SDK / FIRESTORE
@@ -2492,6 +2500,19 @@ function loadLocalCache() {
     const localData = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
     cachedStudents = localData.students || [];
     cachedJournals = localData.journals || {};
+    const profile = localData.teacherProfile || {};
+    teacherProfile = {
+      teacherPin: localStorage.getItem('teacherPin') || profile.teacherPin || '1234',
+      teacherName: localStorage.getItem('teacherName') || profile.teacherName || 'Panel Guru Petualangan',
+      teacherNip: localStorage.getItem('teacherNip') || profile.teacherNip || '',
+      schoolYear: localStorage.getItem('schoolYear') || profile.schoolYear || '',
+      cityName: localStorage.getItem('cityName') || profile.cityName || ''
+    };
+    TEACHER_PIN = teacherProfile.teacherPin;
+    TEACHER_NAME = teacherProfile.teacherName;
+    TEACHER_NIP = teacherProfile.teacherNip;
+    SCHOOL_YEAR = teacherProfile.schoolYear;
+    CITY_NAME = teacherProfile.cityName;
     console.log(`📦 Loaded from local cache: ${cachedStudents.length} students`);
   } catch (e) {
     console.error('Error loading local cache:', e);
@@ -2503,7 +2524,8 @@ function saveLocalCache() {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify({
       students: cachedStudents,
-      journals: cachedJournals
+      journals: cachedJournals,
+      teacherProfile: teacherProfile
     }));
   } catch (e) {
     console.error('Error saving local cache:', e);
@@ -2612,6 +2634,32 @@ async function saveStudents(students) {
   }
 }
 
+async function saveTeacherProfileToFirebase() {
+  if (!window.rtdb) {
+    console.warn('⚠️ Firebase tidak tersedia, tidak dapat menyimpan pengaturan guru ke cloud');
+    return false;
+  }
+
+  try {
+    const { ref, set } = window.rtdbModules;
+    const payload = {
+      teacherPin: TEACHER_PIN,
+      teacherName: TEACHER_NAME,
+      teacherNip: TEACHER_NIP,
+      schoolYear: SCHOOL_YEAR,
+      cityName: CITY_NAME,
+      updatedAt: new Date().toISOString()
+    };
+    await set(ref(window.rtdb, 'settings/teacherProfile'), payload);
+    console.log('✅ Teacher profile successfully synced to Firebase');
+    return true;
+  } catch (e) {
+    console.error('❌ Error saving teacher profile to Firebase:', e);
+    toast('❌ Pengaturan guru tersimpan lokal tapi gagal ke cloud', 'error');
+    return false;
+  }
+}
+
 async function deleteStudent(studentId) {
   cachedStudents = cachedStudents.filter(s => s.id !== studentId);
   saveLocalCache();
@@ -2661,9 +2709,19 @@ async function saveJournalEntry(studentId, date, entryData) {
   
   // Extract hanya data kebiasaan (filter out metadata)
   const habitData = extractHabitData(entryData);
-  
+  // Preserve any existing entry fields so unchanged data is not lost
+  const existingEntry = cachedJournals[key] || {};
+  const mergedEntry = {
+    ...existingEntry,
+    ...habitData,
+    studentId,
+    date,
+    updatedAt: new Date().toISOString(),
+    syncedAt: new Date().toISOString()
+  };
+
   // Simpan ke cache
-  cachedJournals[key] = habitData;
+  cachedJournals[key] = mergedEntry;
   saveLocalCache();
   console.log(`✅ Jurnal disimpan ke localStorage:`, key);
   
@@ -2675,13 +2733,7 @@ async function saveJournalEntry(studentId, date, entryData) {
   
   try {
     const { ref, set } = window.rtdbModules;
-    const payload = {
-      studentId: studentId,
-      date: date,
-      ...habitData,  // Hanya habit data, tidak ada metadata entryData
-      updatedAt: new Date().toISOString(),
-      syncedAt: new Date().toISOString()
-    };
+    const payload = mergedEntry;
     
     console.log(`📤 Upload ke Firebase:`, key, Object.keys(habitData).length + ' kebiasaan');
     
@@ -2851,9 +2903,7 @@ async function populateSelect() {
     sel.appendChild(o);
   });
 }
-</script>
 
-<script>
 // ============================================================
 // STUDENT LOGIN
 // ============================================================
@@ -2889,10 +2939,12 @@ async function openJournalPage() {
   
   console.log(`📅 Loading data untuk: ${today}`);
   await loadEntryData(today);
-  console.log(`✅ Entry data loaded: ${Object.keys(entryData).length} kebiasaan`);\n  buildHabitGrid();
+  console.log(`✅ Entry data loaded: ${Object.keys(entryData).length} kebiasaan`);
+  buildHabitGrid();
   updateHero();
   const total = calcTotal();
-  console.log(`📊 Total XP sekarang: ${total}`);\n  showPage('page-journal');
+  console.log(`📊 Total XP sekarang: ${total}`);
+  showPage('page-journal');
 }
 
 // ============================================================
@@ -3097,9 +3149,7 @@ function renderPopupBody(h) {
   }
   lucide.createIcons();
 }
-</script>
 
-<script>
 function confirmPopup() {
   const h = currentPopupHabit;
   if (!h) return;
@@ -3245,7 +3295,7 @@ function doTeacherLogout() {
   populateSelect();
 }
 
-function saveTeacherProfile() {
+async function saveTeacherProfile() {
   const name = document.getElementById('teacher-profile-name').value.trim();
   const nip = document.getElementById('teacher-profile-nip').value.trim();
   const schoolYear = document.getElementById('teacher-profile-school-year').value.trim();
@@ -3257,11 +3307,20 @@ function saveTeacherProfile() {
   TEACHER_NIP = nip;
   SCHOOL_YEAR = schoolYear;
   CITY_NAME = city;
+  teacherProfile = {
+    ...teacherProfile,
+    teacherName: TEACHER_NAME,
+    teacherNip: TEACHER_NIP,
+    schoolYear: SCHOOL_YEAR,
+    cityName: CITY_NAME
+  };
 
   localStorage.setItem('teacherName', name);
   localStorage.setItem('teacherNip', nip);
   localStorage.setItem('schoolYear', schoolYear);
   localStorage.setItem('cityName', city);
+  saveLocalCache();
+  await saveTeacherProfileToFirebase();
 
   document.querySelector('.teacher-topbar-title').textContent = TEACHER_NAME;
   toast('Pengaturan profil berhasil disimpan', 'success');
@@ -3415,9 +3474,7 @@ async function renderOverview() {
   });
   lucide.createIcons();
 }
-</script>
 
-<script>
 // ============================================================
 // DATA SISWA (SEARCH/ADD/EDIT/DELETE)
 // ============================================================
@@ -3595,9 +3652,7 @@ async function doDeleteStudent() {
     hideLoading();
   }
 }
-</script>
 
-<script>
 // ============================================================
 // RECAP TAB FUNCTIONS
 // ============================================================
@@ -4081,9 +4136,7 @@ async function generatePDF() {
     toast('Gagal membuka jendela cetak. Periksa pengaturan popup browser.', 'error');
   }
 }
-</script>
 
-<script>
 // ============================================================
 // Real-time listener unsubscribers
 let unsubStudents = null;
@@ -4222,6 +4275,23 @@ async function forceSyncFromFirebase() {
         cachedJournals = {};
       }
       
+      if (data && data.settings && data.settings.teacherProfile) {
+        const profile = data.settings.teacherProfile;
+        teacherProfile = {
+          teacherPin: profile.teacherPin || teacherProfile.teacherPin,
+          teacherName: profile.teacherName || teacherProfile.teacherName,
+          teacherNip: profile.teacherNip || teacherProfile.teacherNip,
+          schoolYear: profile.schoolYear || teacherProfile.schoolYear,
+          cityName: profile.cityName || teacherProfile.cityName
+        };
+        TEACHER_PIN = teacherProfile.teacherPin;
+        TEACHER_NAME = teacherProfile.teacherName;
+        TEACHER_NIP = teacherProfile.teacherNip;
+        SCHOOL_YEAR = teacherProfile.schoolYear;
+        CITY_NAME = teacherProfile.cityName;
+        console.log('✅ Teacher profile synced from Firebase');
+      }
+      
       saveLocalCache();
       refreshActiveViews();
       updateSyncStatus('SYNCED', '#10b981');
@@ -4258,23 +4328,29 @@ async function init() {
     // Wait for Firebase to be ready
     let rtdbReady = false;
     let attempts = 0;
+    console.log('⏳ Waiting untuk Firebase initialization...');
     while (!window.rtdb && attempts < 50) {
       await new Promise(r => setTimeout(r, 100));
       attempts++;
     }
     
     if (window.rtdb) {
+      console.log('✅ Firebase ready!');
       setLoadProgress(50, 'Sinkronisasi data dari cloud...');
       
       // Force sync data dari Firebase terlebih dahulu
       rtdbReady = await forceSyncFromFirebase();
+      console.log(`Firebase sync result: ${rtdbReady}`);
+    } else {
+      console.warn('⚠️ Firebase tidak siap (offline mode)');
+      rtdbReady = false;
+    }
+    
+    if (rtdbReady) {
+      setLoadProgress(75, 'Memasang real-time listeners...');
       
-      if (rtdbReady) {
-        setLoadProgress(75, 'Memasang real-time listeners...');
-        
-        // Setup real-time listeners untuk update otomatis
-        await setupRealTimeListeners();
-      }
+      // Setup real-time listeners untuk update otomatis
+      await setupRealTimeListeners();
     }
     
     setLoadProgress(70, rtdbReady ? 'Sinkronisasi Cloud Berhasil!' : 'Portal offline, menggunakan cache lokal');
@@ -4493,21 +4569,16 @@ function setupEventListeners() {
   console.log('✅ Bindings successfully registered');
 }
 
-// Trigger initialization on DOM ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
+// Trigger initialization when everything is loaded
+window.addEventListener('load', () => {
+  if (typeof showPage === 'function' && typeof init === 'function') {
     showPage('page-opening');
     init();
-  });
-} else {
-  showPage('page-opening');
-  init();
-}
+  }
+});
 
 // Realtime Database listeners already handle background syncing automatically.
-</script>
 
-<script>
 // Ensure Lucide icons are created and provide robust fallbacks for dynamically added icons
 (function(){
   const mapEmoji = {
