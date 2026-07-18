@@ -2541,7 +2541,7 @@ function buildStudentsArrayFromSnapshot(snapshotValue) {
   return students;
 }
 
-function refreshActiveViews() {
+async function refreshActiveViews() {
   const teacherPage = document.getElementById('page-teacher');
   const journalPage = document.getElementById('page-journal');
 
@@ -2555,17 +2555,23 @@ function refreshActiveViews() {
     } else if (tab === 'overview') {
       renderOverview();
     } else if (tab === 'recap') {
-      populateRecapFilter().then(() => filterRecap());
+      await populateRecapFilter().then(() => filterRecap());
     }
   }
 
   if (journalPage && journalPage.classList.contains('active') && currentStudent) {
     const dateInput = document.getElementById('entry-date');
     const date = dateInput ? dateInput.value || todayStr() : todayStr();
-    loadEntryData(date).then(() => {
+    console.log(`🔄 Refresh journal untuk tanggal:`, date);
+    
+    try {
+      await loadEntryData(date);
       buildHabitGrid();
       updateHero();
-    });
+      console.log(`✅ Journal UI refreshed`);
+    } catch(e) {
+      console.error('❌ Error refreshing journal view:', e);
+    }
   }
 }
 
@@ -2631,6 +2637,17 @@ async function deleteStudent(studentId) {
   }
 }
 
+// Helper: Extract only habit data dari entryData (exclude metadata)
+function extractHabitData(entryData) {
+  const habitData = {};
+  HABITS.forEach(h => {
+    if (entryData[h.key] !== undefined) {
+      habitData[h.key] = JSON.parse(JSON.stringify(entryData[h.key]));
+    }
+  });
+  return habitData;
+}
+
 async function getJournals() {
   if (!isDataLoaded) {
     loadLocalCache();
@@ -2640,12 +2657,20 @@ async function getJournals() {
 
 async function saveJournalEntry(studentId, date, entryData) {
   const key = studentId + '_' + date;
-  cachedJournals[key] = entryData;
+  console.log(`📝 Menyimpan jurnal: ${key}`, Object.keys(entryData).filter(k => HABITS.find(h => h.key === k)).length + ' kebiasaan');
+  
+  // Extract hanya data kebiasaan (filter out metadata)
+  const habitData = extractHabitData(entryData);
+  
+  // Simpan ke cache
+  cachedJournals[key] = habitData;
   saveLocalCache();
+  console.log(`✅ Jurnal disimpan ke localStorage:`, key);
   
   if (!window.rtdb) {
     console.warn('⚠️ Firebase tidak tersedia, hanya lokal');
-    return;
+    toast('⚠️ Offline: Jurnal disimpan lokal', 'warning');
+    return true;
   }
   
   try {
@@ -2653,17 +2678,20 @@ async function saveJournalEntry(studentId, date, entryData) {
     const payload = {
       studentId: studentId,
       date: date,
-      ...entryData,
+      ...habitData,  // Hanya habit data, tidak ada metadata entryData
       updatedAt: new Date().toISOString(),
       syncedAt: new Date().toISOString()
     };
     
+    console.log(`📤 Upload ke Firebase:`, key, Object.keys(habitData).length + ' kebiasaan');
+    
     // Simpan ke Firebase
     await set(ref(window.rtdb, 'journals/' + key), payload);
     console.log('✅ Journal entry saved to Firebase:', key);
+    toast('Jurnal berhasil disimpan ke cloud', 'success');
     
-    // Refresh UI
-    refreshActiveViews();
+    // Refresh UI setelah berhasil
+    await refreshActiveViews();
     return true;
   } catch(e) {
     console.error('❌ Error saving journal entry:', e);
@@ -2848,16 +2876,23 @@ async function doStudentLogin() {
 
 async function openJournalPage() {
   const s = currentStudent;
+  console.log(`📖 Opening journal page untuk ${s.name} (${s.id})`);
+  
   document.getElementById('topbar-name').textContent = s.name;
   document.getElementById('topbar-class').textContent = 'Kelas '+s.kelas+' – Absen '+s.absen;
   const av = document.getElementById('topbar-avatar');
   av.textContent = s.name.charAt(0).toUpperCase();
+  
+  const today = todayStr();
   const dateEl = document.getElementById('entry-date');
-  dateEl.value = todayStr();
-  await loadEntryData(todayStr());
-  buildHabitGrid();
+  dateEl.value = today;
+  
+  console.log(`📅 Loading data untuk: ${today}`);
+  await loadEntryData(today);
+  console.log(`✅ Entry data loaded: ${Object.keys(entryData).length} kebiasaan`);\n  buildHabitGrid();
   updateHero();
-  showPage('page-journal');
+  const total = calcTotal();
+  console.log(`📊 Total XP sekarang: ${total}`);\n  showPage('page-journal');
 }
 
 // ============================================================
@@ -2866,7 +2901,25 @@ async function openJournalPage() {
 async function loadEntryData(date) {
   const journals = await getJournals();
   const key = currentStudent.id+'_'+date;
-  entryData = journals[key] ? JSON.parse(JSON.stringify(journals[key])) : {};
+  
+  if (journals[key]) {
+    // Load dari cache dan reconstruct entryData dengan hanya habit data
+    const savedData = journals[key];
+    entryData = {};
+    
+    HABITS.forEach(h => {
+      if (savedData[h.key] !== undefined) {
+        // Deep clone untuk avoid reference issues
+        entryData[h.key] = JSON.parse(JSON.stringify(savedData[h.key]));
+        console.log(`📋 Loaded habit ${h.key} dari cache`);
+      }
+    });
+    console.log(`✅ Entri diload dari cache: ${key}, ${Object.keys(entryData).length} kebiasaan`);
+  } else {
+    // Kosong jika belum ada entry untuk hari ini
+    entryData = {};
+    console.log(`📭 Belum ada entri untuk: ${key}`);
+  }
 }
 
 async function saveEntryData(date) {
@@ -3106,15 +3159,30 @@ function closeHonestyModal() {
 
 async function confirmSaveJournal() {
   const date = document.getElementById('entry-date').value;
+  const studentId = currentStudent.id;
+  console.log(`💾 Student ${studentId} saving journal untuk ${date}...`);
+  console.log(`📊 Data yang disimpan:`, Object.keys(entryData).length, 'kebiasaan');
+  
   showLoading('Menyimpan jurnal...');
   
   try {
     await saveEntryData(date);
+    console.log(`✅ Save completed, waiting for sync...`);
+    
+    // Wait a bit untuk Firebase listener sync
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Reload data untuk confirm
+    await loadEntryData(date);
+    console.log(`✅ Data reloaded: ${Object.keys(entryData).length} kebiasaan`);
+    
     closeHonestyModal();
-    toast('Jurnal berhasil disimpan! Total: '+calcTotal()+' XP','success');
+    const total = calcTotal();
+    console.log(`📈 Total XP: ${total}`);
+    toast(`✅ Jurnal disimpan! Total: ${total} XP`, 'success');
   } catch(e) {
-    console.error('Error saving journal:', e);
-    toast('Gagal menyimpan jurnal', 'error');
+    console.error('❌ Error saving journal:', e);
+    toast('❌ Gagal menyimpan jurnal', 'error');
   } finally {
     hideLoading();
   }
@@ -4090,10 +4158,23 @@ async function setupRealTimeListeners() {
     
     console.log('🔄 Memasang real-time listeners untuk journals...');
     unsubJournals = onValue(ref(window.rtdb, 'journals'), (snap) => {
-      cachedJournals = snap.val() || {};
-      console.log(`📥 Jurnal diperbarui dari Firebase: ${Object.keys(cachedJournals).length} entries`);
+      const newJournals = snap.val() || {};
+      const oldCount = Object.keys(cachedJournals).length;
+      const newCount = Object.keys(newJournals).length;
+      
+      if (newCount !== oldCount) {
+        console.log(`📥 Jurnal diperbarui: ${oldCount} → ${newCount} entries`);
+      }
+      
+      cachedJournals = newJournals;
       saveLocalCache();
-      refreshActiveViews();
+      
+      // Async refresh tanpa blocking
+      try {
+        refreshActiveViews();
+      } catch(e) {
+        console.error('⚠️ Error in refreshActiveViews:', e);
+      }
     }, (error) => {
       console.error('❌ Error listening to journals:', error);
     });
