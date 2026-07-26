@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* SPORTY MODERN DESIGN SYSTEM */
 :root {
@@ -41,8 +41,8 @@
   --shadow-btn-gold: 0 6px 14px rgba(245, 158, 11, 0.4);
   --shadow-btn-cyan: 0 6px 14px rgba(6, 182, 212, 0.4);
   --shadow-btn-green: 0 6px 14px rgba(16, 185, 129, 0.4);
-  --font-game: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-  --font-title: 'Fredoka', system-ui, 'Segoe UI', sans-serif;
+  --font-game: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+  --font-title: 'Poppins', system-ui, 'Segoe UI', sans-serif;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -599,10 +599,28 @@ body::after {
   flex: 1;
   min-width: 0;
 }
+.header-teacher {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 8px 14px;
+  margin: 8px 12px;
+  font-family: var(--font-game);
+  font-size: 0.82rem;
+  color: var(--text-dark);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.header-teacher .teacher-item { font-weight: 700; color: var(--text-dark); margin-right: 8px; }
+
+/* teacher identity card removed — styles left intentionally blank */
+
 .topbar-name {
   font-family: var(--font-title);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: var(--text-dark);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1342,7 +1360,7 @@ body::after {
   display: flex;
   align-items: center;
   gap: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
   position: relative;
   overflow: hidden;
@@ -1362,50 +1380,67 @@ body::after {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.teacher-topbar-sub {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-top: 4px;
+  opacity: 0.95;
+}
 .tab-bar {
   background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-  backdrop-filter: blur(16px);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  overflow-x: hidden;
-  overflow-y: visible;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   padding: 10px 12px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
   position: sticky;
   top: 0;
   z-index: 12;
-  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: center;
+}
+
+.header-teacher {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 16px;
+  margin: 0 0 12px 0;
+  font-family: var(--font-game);
+  font-size: 0.82rem;
+  color: var(--text-dark);
+  background: transparent;
+  border-top: 1px solid rgba(255,255,255,0.04);
 }
 .tab-btn {
-  flex: 1 1 calc(50% - 4px);
-  min-width: 0;
-  padding: 10px 10px;
+  width: 100%;
+  padding: 8px 12px;
   background: #334155;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
   font-family: var(--font-title);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: var(--text-dark);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
   display: inline-flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 6px;
   white-space: normal;
-  line-height: 1.2;
+  line-height: 1.05;
   text-align: center;
-  min-height: 48px;
+  min-height: 56px;
   box-shadow: none;
-  overflow: hidden;
-  word-break: break-word;
 }
 .tab-btn i {
-  flex-shrink: 0;
-  margin-right: 6px !important;
+  display: block;
+  margin: 0 0 4px 0 !important;
 }
 .tab-btn:hover {
   color: var(--text-dark);
@@ -1455,7 +1490,7 @@ body::after {
 .stat-card {
   background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
   border-radius: var(--radius-md);
-  padding: 18px;
+  padding: 10px 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
   position: relative;
@@ -1485,20 +1520,20 @@ body::after {
   box-shadow: 0 0 8px var(--primary-purple);
 }
 .stat-label {
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   color: var(--text-muted);
   font-weight: 700;
   text-transform: uppercase;
-  margin-bottom: 8px;
-  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
 }
 .stat-val {
   font-family: var(--font-title);
-  font-size: 1.8rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: var(--primary-gold);
-  text-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
-  line-height: 1.2;
+  text-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+  line-height: 1.1;
 }
 .participation-card {
   background: linear-gradient(145deg, #1e293b 0%, #0f172a 100%);
@@ -2151,33 +2186,9 @@ i[data-lucide] svg, i[data-lucide] .lucide {
       </button>
     </div>
 
-    <!-- NILAI KAMU CARD -->
-    <div class="hero-card">
-      <div class="quest-badge"><i data-lucide="map" style="width:14px;height:14px"></i> Quest Harian</div>
-      <div class="hero-date" id="hero-date">📅 Hari ini</div>
-      <div class="hero-score-section">
-        <div class="hero-score-left">
-          <div class="hero-label">Nilai Kamu</div>
-          <div class="hero-pts-wrap">
-            <span class="hero-pts" id="hero-pts">0</span>
-            <span class="hero-max">/ 40 XP</span>
-          </div>
-        </div>
-        <div class="hero-rank-badge">
-          <div class="hero-grade" id="hero-grade">-</div>
-          <div class="hero-rank-title" id="hero-rank-title">Pemula</div>
-        </div>
-      </div>
-      <div class="xp-bar-container">
-        <div class="xp-bar-label">
-          <span>Progress Level</span>
-          <span id="hero-xp-pct">0%</span>
-        </div>
-        <div class="hero-prog-bg">
-          <div class="hero-prog-fill" id="hero-prog-fill" style="width:0%"></div>
-        </div>
-      </div>
-    </div>
+    <!-- header guru dipindah ke panel guru supaya hanya terlihat oleh guru setelah login -->
+
+    <!-- Quest Harian removed as requested -->
 
     <!-- DATE SELECTION -->
     <div class="date-bar">
@@ -2251,11 +2262,13 @@ i[data-lucide] svg, i[data-lucide] .lucide {
         </button>
       </div>
       
+      
+
       <div class="tab-bar" id="teacher-tab-bar">
-          <button class="tab-btn active" data-tab="overview"><i data-lucide="bar-chart-2" style="width:18px;height:18px;margin-right:8px"></i>Nilai Kamu Hari Ini</button>
-        <button class="tab-btn" data-tab="students"><i data-lucide="users" style="width:18px;height:18px;margin-right:8px"></i>Database Siswa</button>
-        <button class="tab-btn" data-tab="recap"><i data-lucide="file-text" style="width:18px;height:18px;margin-right:8px"></i>Rekap</button>
-        <button class="tab-btn" data-tab="settings"><i data-lucide="settings" style="width:18px;height:18px;margin-right:8px"></i>Menu Pengaturan</button>
+        <button class="tab-btn active" data-tab="overview"><i data-lucide="bar-chart-2" style="width:18px;height:18px"></i>Nilai Kamu Hari Ini</button>
+        <button class="tab-btn" data-tab="students"><i data-lucide="users" style="width:18px;height:18px"></i>Database Siswa</button>
+        <button class="tab-btn" data-tab="recap"><i data-lucide="file-text" style="width:18px;height:18px"></i>Rekap</button>
+        <button class="tab-btn" data-tab="settings"><i data-lucide="settings" style="width:18px;height:18px"></i>Menu Pengaturan</button>
       </div>
       
       <!-- TAB: OVERVIEW -->
@@ -3015,14 +3028,16 @@ async function openJournalPage() {
   const s = currentStudent;
   console.log(`📖 Opening journal page untuk ${s.name} (${s.id})`);
   
-  document.getElementById('topbar-name').textContent = s.name;
-  document.getElementById('topbar-class').textContent = 'Kelas '+s.kelas+' – Absen '+s.absen;
+  const topbarName = document.getElementById('topbar-name');
+  if (topbarName) topbarName.textContent = s.name;
+  const topbarClass = document.getElementById('topbar-class');
+  if (topbarClass) topbarClass.textContent = 'Kelas '+s.kelas+' – Absen '+s.absen;
   const av = document.getElementById('topbar-avatar');
-  av.textContent = s.name.charAt(0).toUpperCase();
+  if (av) av.textContent = s.name ? s.name.charAt(0).toUpperCase() : '?';
   
   const today = todayStr();
   const dateEl = document.getElementById('entry-date');
-  dateEl.value = today;
+  if (dateEl) dateEl.value = today;
   
   console.log(`📅 Loading data untuk: ${today}`);
   await loadEntryData(today);
@@ -3131,32 +3146,47 @@ function calcTotal() {
 function updateHero() {
   const total = calcTotal();
   const pct = Math.round(total/MAX_PTS*100);
-  document.getElementById('hero-pts').textContent = total;
-  
+  const heroPtsEl = document.getElementById('hero-pts');
+  if (heroPtsEl) heroPtsEl.textContent = total;
+
   // Set grade rating
   const g = grade(total);
-  document.getElementById('hero-grade').textContent = g;
-  
+  const heroGradeEl = document.getElementById('hero-grade');
+  if (heroGradeEl) heroGradeEl.textContent = g;
+
   // Set RPG rank title
   let rank = "Pemula";
   let rankKey = "pemula";
   if (total >= 36) { rank = "Pahlawan"; rankKey = "pahlawan"; }
   else if (total >= 26) { rank = "Ksatria"; rankKey = "ksatria"; }
   else if (total >= 16) { rank = "Pengembara"; rankKey = "pengembara"; }
-  document.getElementById('hero-rank-title').textContent = rank;
+  const heroRankTitleEl = document.getElementById('hero-rank-title');
+  if (heroRankTitleEl) heroRankTitleEl.textContent = rank;
 
   const av = document.getElementById('topbar-avatar');
   if (av && currentStudent) {
     av.className = 'topbar-avatar rank-' + rankKey;
-    av.textContent = currentStudent.name.charAt(0).toUpperCase();
+    av.textContent = currentStudent.name ? currentStudent.name.charAt(0).toUpperCase() : '?';
   }
-  
-  document.getElementById('hero-prog-fill').style.width = pct+'%';
-  document.getElementById('hero-xp-pct').textContent = pct+'%';
-  
-  document.getElementById('save-total').innerHTML = total+' <span>/ '+MAX_PTS+' XP</span>';
-  const date = document.getElementById('entry-date').value || todayStr();
-  document.getElementById('hero-date').textContent = '📅 ' + fmtDate(date);
+
+  const heroProgFill = document.getElementById('hero-prog-fill');
+  if (heroProgFill) heroProgFill.style.width = pct+'%';
+  const heroXpPct = document.getElementById('hero-xp-pct');
+  if (heroXpPct) heroXpPct.textContent = pct+'%';
+
+  const saveTotalEl = document.getElementById('save-total');
+  if (saveTotalEl) saveTotalEl.innerHTML = total+' <span>/ '+MAX_PTS+' XP</span>';
+  const date = (document.getElementById('entry-date') && document.getElementById('entry-date').value) || todayStr();
+  const heroDateEl = document.getElementById('hero-date');
+  if (heroDateEl) heroDateEl.textContent = '📅 ' + fmtDate(date);
+
+  // Populate teacher identity header (if present)
+  const tNameEl = document.getElementById('teacher-name-display');
+  if (tNameEl) tNameEl.innerHTML = 'Guru: <span style="font-weight:800">' + (TEACHER_NAME || '-') + '</span>';
+  const tNipEl = document.getElementById('teacher-nip-display');
+  if (tNipEl) tNipEl.innerHTML = 'NIP: <span style="font-weight:800">' + (TEACHER_NIP || '-') + '</span>';
+  const tYearEl = document.getElementById('teacher-year-display');
+  if (tYearEl) tYearEl.innerHTML = 'T.A: <span style="font-weight:800">' + (SCHOOL_YEAR || '-') + '</span>';
 }
 
 // ============================================================
@@ -3164,11 +3194,15 @@ function updateHero() {
 // ============================================================
 function openPopup(h) {
   currentPopupHabit = h;
-  document.getElementById('popup-icon').innerHTML = `<i data-lucide="${h.icon}"></i>`;
-  document.getElementById('popup-name').textContent = h.label;
-  document.getElementById('popup-max').textContent = 'Maks '+h.maxPts+' XP';
+  const popupIcon = document.getElementById('popup-icon');
+  if (popupIcon) popupIcon.innerHTML = `<i data-lucide="${h.icon}"></i>`;
+  const popupName = document.getElementById('popup-name');
+  if (popupName) popupName.textContent = h.label;
+  const popupMax = document.getElementById('popup-max');
+  if (popupMax) popupMax.textContent = 'Maks '+h.maxPts+' XP';
   renderPopupBody(h);
-  document.getElementById('popup-habit').classList.add('active');
+  const popupHabit = document.getElementById('popup-habit');
+  if (popupHabit) popupHabit.classList.add('active');
   lucide.createIcons();
 }
 
@@ -3400,6 +3434,20 @@ function showTeacherDashboard() {
     overviewTab.style.display = 'block';
     overviewTab.style.visibility = 'visible';
   }
+
+  // Ensure teacher identity header is visible and populated when dashboard shown
+  const headerTeacher = document.getElementById('header-teacher');
+  if (headerTeacher) {
+    headerTeacher.style.display = headerTeacher.style.display || 'flex';
+    const tNameEl = document.getElementById('teacher-name-display');
+    if (tNameEl) tNameEl.innerHTML = 'Guru: <span style="font-weight:800">' + (TEACHER_NAME || '-') + '</span>';
+    const tNipEl = document.getElementById('teacher-nip-display');
+    if (tNipEl) tNipEl.innerHTML = 'NIP: <span style="font-weight:800">' + (TEACHER_NIP || '-') + '</span>';
+    const tYearEl = document.getElementById('teacher-year-display');
+    if (tYearEl) tYearEl.innerHTML = 'T.A: <span style="font-weight:800">' + (SCHOOL_YEAR || '-') + '</span>';
+  }
+
+  // detailed identity card removed — nothing to populate here
 }
 
 function doTeacherLogin() {
@@ -3411,7 +3459,22 @@ function doTeacherLogin() {
   if (pin !== TEACHER_PIN) { toast('Password salah','error'); return; }
   
   showTeacherDashboard();
-  document.querySelector('.teacher-topbar-title').textContent = TEACHER_NAME;
+  const topbarTitle = document.querySelector('.teacher-topbar-title');
+  if (topbarTitle) topbarTitle.textContent = TEACHER_NAME || 'Panel Guru Petualangan';
+
+  // Also populate teacher identity header if present (journal & teacher pages)
+  const tNameEl = document.getElementById('teacher-name-display');
+  if (tNameEl) tNameEl.innerHTML = 'Guru: <span style="font-weight:800">' + (TEACHER_NAME || '-') + '</span>';
+  const tNipEl = document.getElementById('teacher-nip-display');
+  if (tNipEl) tNipEl.innerHTML = 'NIP: <span style="font-weight:800">' + (TEACHER_NIP || '-') + '</span>';
+  const tYearEl = document.getElementById('teacher-year-display');
+  if (tYearEl) tYearEl.innerHTML = 'T.A: <span style="font-weight:800">' + (SCHOOL_YEAR || '-') + '</span>';
+
+  // detailed identity card removed — nothing to populate here
+
+  // Refresh hero/header values if any are visible
+  try { updateHero(); } catch(e) { /* ignore */ }
+
   switchTeacherTab('overview');
 }
 
@@ -4196,6 +4259,8 @@ async function generatePDF() {
           </div>
         </div>
       </div>
+      
+      
 
       <!-- BAGIAN II: REKAPITULASI TOTAL CAPAIAN -->
       <div style="margin-bottom:8px">
