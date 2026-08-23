@@ -3589,6 +3589,62 @@ select { -webkit-font-smoothing: antialiased; }
   .loading-overlay.active { animation: none; }
   .tab-content.tab-enter { animation: none; }
 }
+
+@media (pointer: coarse) and (max-width: 700px) {
+  .page.page-enter { animation: mobilePageEnter .2s ease-out both; }
+  .page.page-exit { animation: mobilePageExit .16s ease-in both; }
+  #page-login .login-logo .icon-3d,
+  .opening-logo .icon-3d { animation: none; }
+  #popup-habit.active .popup-content,
+  .modal-overlay.active .modal-card { animation: mobilePopupEnter .22s ease-out both; }
+  #popup-habit.is-closing .popup-content,
+  .modal-overlay.is-closing .modal-card { animation: mobilePopupExit .16s ease-in both; }
+  .btn-game,
+  .btn-cancel,
+  .option-btn,
+  .btn-close-popup,
+  input,
+  select { transition: transform .16s ease, opacity .16s ease, background-color .16s ease, box-shadow .16s ease; }
+  #app-container,
+  .page,
+  .login-card,
+  .gate-card,
+  .teacher-topbar,
+  .topbar,
+  #popup-habit,
+  .modal-overlay,
+  .loading-overlay { backdrop-filter: none; }
+  #popup-habit,
+  .modal-overlay,
+  .loading-overlay { background: rgba(15, 23, 42, .94); }
+  .login-card,
+  .gate-card,
+  .teacher-topbar,
+  .topbar { box-shadow: 0 8px 18px rgba(35, 40, 68, .1); }
+  .opening-content,
+  .login-card,
+  .gate-card,
+  .popup-content,
+  .modal-card,
+  .habit-tile { box-shadow: 0 8px 18px rgba(35, 40, 68, .1); }
+}
+
+@keyframes mobilePageEnter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes mobilePageExit {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes mobilePopupEnter {
+  from { opacity: 0; transform: scale(.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes mobilePopupExit {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(.99); }
+}
 </style>
 </head>
 <body>
@@ -4157,6 +4213,7 @@ let unsubSettings = null;
 let cachedStudents = [];
 let cachedJournals = {};
 let isDataLoaded = false;
+let refreshViewsTimer = null;
 
 // Fetch all data from localStorage immediately (instant offline load)
 function loadLocalCache() {
@@ -4259,6 +4316,14 @@ async function refreshActiveViews() {
       console.error('❌ Error refreshing journal view:', e);
     }
   }
+}
+
+function scheduleRefreshActiveViews() {
+  if (refreshViewsTimer) return;
+  refreshViewsTimer = setTimeout(() => {
+    refreshViewsTimer = null;
+    refreshActiveViews();
+  }, 80);
 }
 
 async function getStudents() {
@@ -4776,7 +4841,7 @@ function buildHabitGrid() {
     tile.addEventListener('click',()=>openPopup(h));
     grid.appendChild(tile);
   });
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') lucide.createIcons({ root: grid });
   updateHero();
 }
 
@@ -4878,7 +4943,7 @@ function openPopup(h) {
     popupHabit.classList.remove('is-closing');
     popupHabit.classList.add('active');
   }
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') lucide.createIcons();
 }
 
 function renderPopupBody(h) {
@@ -5411,7 +5476,7 @@ async function renderOverview() {
     `;
     ll.appendChild(item);
   });
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') lucide.createIcons({ root: ll });
 }
 
 // ============================================================
@@ -5429,6 +5494,13 @@ async function renderStudents(q) {
   
   const query = (q||'').toLowerCase();
   const filtered = students.filter(s=>s.name.toLowerCase().includes(query)||s.kelas.toLowerCase().includes(query));
+  const pointsByStudent = {};
+  Object.keys(journals).forEach(key => {
+    const separator = key.indexOf('_');
+    if (separator < 1) return;
+    const studentId = key.slice(0, separator);
+    pointsByStudent[studentId] = (pointsByStudent[studentId] || 0) + calcEntryPts(journals[key]);
+  });
   
   filtered.sort((a,b)=>{
     const kelasA = (a.kelas || '').toString();
@@ -5443,12 +5515,7 @@ async function renderStudents(q) {
   }
   
   filtered.forEach((s,i)=>{
-    let total = 0;
-    Object.keys(journals).forEach(k=>{
-      if (k.startsWith(s.id+'_')) {
-        total += calcEntryPts(journals[k]);
-      }
-    });
+    const total = pointsByStudent[s.id] || 0;
     
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -5474,7 +5541,7 @@ async function renderStudents(q) {
       openDeleteModal(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
     });
   });
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') lucide.createIcons({ root: tbody });
 }
 
 function openAddModal() {
@@ -6148,7 +6215,7 @@ async function setupRealTimeListeners() {
       console.log(`📥 Siswa diperbarui dari Firebase: ${newStudents.length} siswa`);
       cachedStudents = newStudents;
       saveLocalCache();
-      refreshActiveViews();
+      scheduleRefreshActiveViews();
     }, (error) => {
       console.error('❌ Error listening to students:', error);
     });
@@ -6191,7 +6258,7 @@ async function setupRealTimeListeners() {
       
       // Async refresh tanpa blocking
       try {
-        refreshActiveViews();
+        scheduleRefreshActiveViews();
       } catch(e) {
         console.error('⚠️ Error in refreshActiveViews:', e);
       }
