@@ -3544,7 +3544,7 @@ select { -webkit-font-smoothing: antialiased; }
 .modal-overlay.active .modal-card { will-change: opacity, transform; animation: popupEnter .36s cubic-bezier(.22,1,.36,1) both; }
 .modal-overlay.is-closing .modal-card { will-change: opacity, transform; animation: popupExit .24s cubic-bezier(.4,0,.2,1) both; }
 .loading-overlay.active { will-change: opacity; animation: overlayEnter .24s cubic-bezier(.22,1,.36,1) both; }
-.tab-content.tab-enter { will-change: opacity, transform; animation: tabEnter .32s cubic-bezier(.22,1,.36,1) both; }
+.tab-content.tab-enter { will-change: opacity, transform; animation: tabEnter .24s cubic-bezier(.22,1,.36,1) both; }
 
 @keyframes pageEnter {
   from { opacity: 0; transform: scale(.985) translateY(8px); }
@@ -3555,8 +3555,8 @@ select { -webkit-font-smoothing: antialiased; }
   to { opacity: 0; transform: scale(1.015) translateY(-4px); }
 }
 @keyframes tabEnter {
-  from { opacity: 0; transform: scale(.99) translateY(6px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 @keyframes overlayEnter {
   from { opacity: 0; }
@@ -4202,6 +4202,7 @@ let currentStudent = null;
 let entryData = {};
 let currentPopupHabit = null;
 let deleteTargetId = null;
+let activeTeacherTab = null;
 let unsubSettings = null;
 
 // ============================================================
@@ -5238,6 +5239,7 @@ function doTeacherLogout() {
   const pinInput = document.getElementById('teacher-pin-input');
 
   if (pinInput) pinInput.value = '';
+  activeTeacherTab = null;
   showPage('page-login');
   populateSelect();
 
@@ -5352,6 +5354,8 @@ function importBackup(e) {
 }
 
 function switchTeacherTab(tab) {
+  if (activeTeacherTab === tab) return;
+  activeTeacherTab = tab;
   const tabBar = document.getElementById('teacher-tab-bar');
   const panel = document.getElementById('teacher-panel');
   if (tabBar) {
@@ -5383,7 +5387,7 @@ function switchTeacherTab(tab) {
     selectedTab.classList.remove('tab-enter');
     void selectedTab.offsetWidth;
     selectedTab.classList.add('tab-enter');
-    setTimeout(() => selectedTab.classList.remove('tab-enter'), 320);
+    setTimeout(() => selectedTab.classList.remove('tab-enter'), 240);
   }
   
   // Show/hide back button based on current tab
@@ -5404,7 +5408,7 @@ function switchTeacherTab(tab) {
     document.getElementById('teacher-profile-school-year').value = SCHOOL_YEAR;
     document.getElementById('teacher-profile-city').value = CITY_NAME;
   }
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined' && selectedTab) lucide.createIcons({ root: selectedTab });
 }
 
 // ============================================================
@@ -6515,6 +6519,7 @@ function setupEventListeners() {
   
   if (linkTeacherLogin) {
     linkTeacherLogin.addEventListener('click', ()=>{
+      activeTeacherTab = null;
       showPage('page-teacher');
       const teacherPinInput = document.getElementById('teacher-pin-input');
       if (teacherPinInput) teacherPinInput.value = '';
