@@ -2960,7 +2960,10 @@ body { background: #f7f8fc; color: #24324a; }
   border-radius: 20px;
   background: #f8f9ff;
   border: 1px solid rgba(36,50,74,.08);
-  box-shadow: 0 10px 20px rgba(36,50,74,.09);
+  position: relative;
+  z-index: 2;
+  transform: translateY(-3px);
+  box-shadow: 0 14px 24px rgba(36,50,74,.14), 0 3px 7px rgba(53,189,177,.12);
 }
 .monthly-recap-header {
   display: flex;
@@ -3153,6 +3156,46 @@ body:has(#page-teacher.active) { background: var(--ui-bg) !important; }
   background: var(--ui-primary);
   box-shadow: 0 8px 18px rgba(93, 62, 254, .22);
   text-shadow: none;
+}
+
+#page-login .login-logo {
+  width: 116px;
+  height: 116px;
+  margin-bottom: 22px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  transform: none;
+  animation: loginLogoEntrance .8s cubic-bezier(.2,.8,.2,1) both;
+}
+
+#page-login .login-logo::before,
+#page-login .login-logo::after { display: none; }
+
+#page-login .login-logo .icon-3d {
+  width: 112px !important;
+  height: 112px !important;
+  object-fit: contain;
+  filter: drop-shadow(0 14px 10px rgba(42, 31, 93, .22)) drop-shadow(0 5px 18px rgba(53, 189, 177, .22));
+  animation: loginLogoFloat 3.8s ease-in-out .8s infinite;
+}
+
+@keyframes loginLogoEntrance {
+  0% { opacity: 0; transform: translateY(18px) scale(.72) rotate(-8deg); }
+  70% { opacity: 1; transform: translateY(-4px) scale(1.04) rotate(2deg); }
+  100% { opacity: 1; transform: translateY(0) scale(1) rotate(0); }
+}
+
+@keyframes loginLogoFloat {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-5px) rotate(1deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #page-login .login-logo,
+  #page-login .login-logo .icon-3d { animation: none; }
 }
 .btn-game-cyan,
 .btn-game-green,
@@ -3412,12 +3455,139 @@ select { -webkit-font-smoothing: antialiased; }
 #page-teacher .teacher-topbar { box-shadow: 0 6px 16px rgba(35, 40, 68, .08); }
 #page-teacher .tab-bar { box-shadow: 0 6px 16px rgba(35, 40, 68, .07); }
 
+.teacher-identity {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 18px 10px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, .84);
+  border: 1px solid rgba(117, 105, 220, .12);
+  border-radius: 16px;
+  position: relative;
+  z-index: 2;
+  transform: translateY(-3px);
+  box-shadow: 0 12px 22px rgba(35, 40, 68, .14), 0 2px 5px rgba(53, 189, 177, .12);
+}
+.teacher-identity-item {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 2px 10px;
+  border-left: 2px solid rgba(53, 189, 177, .45);
+}
+.teacher-identity-item:first-child { border-left: 0; padding-left: 0; }
+.teacher-identity-label {
+  color: var(--ui-muted);
+  font-size: .58rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.teacher-identity-item strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ui-ink);
+  font-size: .72rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .teacher-identity { margin-left: 14px; margin-right: 14px; gap: 7px; padding: 11px 10px; }
+  .teacher-identity-item { padding-left: 7px; padding-right: 4px; }
+  .teacher-identity-item strong { font-size: .65rem; }
+}
+
 @media (max-width: 560px) {
   .topbar, .teacher-topbar { padding-left: 14px; padding-right: 14px; }
   .habit-grid { gap: 10px; margin-left: 14px; margin-right: 14px; }
   .habit-tile { min-height: 116px; }
   .date-bar, .monthly-recap { margin-left: 14px; margin-right: 14px; }
   .habit-section-title { margin-left: 14px; margin-right: 14px; }
+}
+
+#page-journal .monthly-recap {
+  position: relative;
+  z-index: 2;
+  margin: 0 14px 10px;
+  padding: 10px 11px;
+  border-radius: 16px;
+  box-shadow: 0 8px 16px rgba(36, 50, 74, .12), 0 2px 5px rgba(53, 189, 177, .1) !important;
+  transition: opacity .22s ease, transform .22s ease, box-shadow .22s ease;
+}
+#page-journal .monthly-recap-header { gap: 8px; margin-bottom: 8px; }
+#page-journal .monthly-recap-title { font-size: .7rem; }
+#page-journal .monthly-recap-summary { margin-top: 2px; font-size: .6rem; }
+#page-journal .monthly-recap-legend { gap: 6px; font-size: .55rem; }
+#page-journal .monthly-days { gap: 4px; }
+#page-journal .monthly-day { min-height: 31px; padding: 4px 2px; border-radius: 8px; font-size: .58rem; }
+#page-journal .monthly-day small { font-size: .43rem; }
+#page-journal .monthly-recap.is-scroll-hidden {
+  opacity: 0;
+  transform: translateY(-18px);
+  pointer-events: none;
+}
+
+/* LIGHT UI TRANSITIONS */
+.page.page-enter { z-index: 1; will-change: opacity, transform; animation: pageEnter .38s cubic-bezier(.22,1,.36,1) both; }
+.page.page-exit { display: flex !important; position: absolute; inset: 0; width: 100%; height: 100%; z-index: 20; pointer-events: none; will-change: opacity, transform; animation: pageExit .3s cubic-bezier(.4,0,.2,1) both; }
+#page-teacher.page.page-exit { position: absolute; inset: 0; }
+#popup-habit.active { will-change: opacity; animation: overlayEnter .3s cubic-bezier(.22,1,.36,1) both; }
+#popup-habit.is-closing { display: flex; pointer-events: none; will-change: opacity; animation: overlayExit .24s cubic-bezier(.4,0,.2,1) both; }
+#popup-habit.active .popup-content { will-change: opacity, transform; animation: popupEnter .36s cubic-bezier(.22,1,.36,1) both; }
+#popup-habit.is-closing .popup-content { will-change: opacity, transform; animation: popupExit .24s cubic-bezier(.4,0,.2,1) both; }
+.modal-overlay.active { will-change: opacity; animation: overlayEnter .3s cubic-bezier(.22,1,.36,1) both; }
+.modal-overlay.is-closing { display: flex; pointer-events: none; will-change: opacity; animation: overlayExit .24s cubic-bezier(.4,0,.2,1) both; }
+.modal-overlay.active .modal-card { will-change: opacity, transform; animation: popupEnter .36s cubic-bezier(.22,1,.36,1) both; }
+.modal-overlay.is-closing .modal-card { will-change: opacity, transform; animation: popupExit .24s cubic-bezier(.4,0,.2,1) both; }
+.loading-overlay.active { will-change: opacity; animation: overlayEnter .24s cubic-bezier(.22,1,.36,1) both; }
+.tab-content.tab-enter { will-change: opacity, transform; animation: tabEnter .32s cubic-bezier(.22,1,.36,1) both; }
+
+@keyframes pageEnter {
+  from { opacity: 0; transform: scale(.985) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes pageExit {
+  from { opacity: 1; transform: scale(1) translateY(0); }
+  to { opacity: 0; transform: scale(1.015) translateY(-4px); }
+}
+@keyframes tabEnter {
+  from { opacity: 0; transform: scale(.99) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes overlayEnter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes overlayExit {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes popupEnter {
+  from { opacity: 0; transform: translateY(14px) scale(.96); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes popupExit {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(8px) scale(.985); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page.page-enter,
+  .page.page-exit,
+  #popup-habit.active,
+  #popup-habit.is-closing,
+  #popup-habit.active .popup-content,
+  #popup-habit.is-closing .popup-content,
+  .modal-overlay.active,
+  .modal-overlay.is-closing,
+  .modal-overlay.active .modal-card,
+  .modal-overlay.is-closing .modal-card,
+  .loading-overlay.active { animation: none; }
+  .tab-content.tab-enter { animation: none; }
 }
 </style>
 </head>
@@ -3512,11 +3682,7 @@ select { -webkit-font-smoothing: antialiased; }
     <div class="opening-content">
       <div class="quest-badge"><i data-lucide="compass" style="width:14px;height:14px"></i> Kelas V</div>
       <div class="opening-logo">
-        <svg class="icon-3d" viewBox="0 0 64 64" aria-hidden="true">
-          <path d="M32 8l10 18 18 10-18 10-10 18-10-18-18-10 18-10 10-18z" fill="#f7c96b"/>
-          <path d="M32 14l7 12 12 7-12 7-7 12-7-12-12-7 12-7 7-12z" fill="#fff0ba"/>
-          <path d="M32 28l4 4 4 4-4 4-4 4-4-4-4-4 4-4 4-4z" fill="#2f4b5a"/>
-        </svg>
+        <img class="icon-3d" src="icon.png" alt="7 Kebiasaan Anak Indonesia Hebat" style="width:64px;height:64px;object-fit:contain">
       </div>
       <div class="opening-title" style="font-size: 1.65rem; line-height: 1.35; margin-bottom: 4px;">SD NEGERI PENGKOL</div>
       <div class="opening-subtitle" style="margin-bottom: 40px; color: var(--accent-cyan);">7 Kebiasaan Anak Indonesia Hebat</div>
@@ -3537,12 +3703,7 @@ select { -webkit-font-smoothing: antialiased; }
     <div class="login-card">
       <div class="quest-badge"><i data-lucide="sparkles" style="width:14px;height:14px"></i> SD NEGERI PENGKOL</div>
       <div class="login-logo">
-        <svg class="icon-3d" viewBox="0 0 64 64" aria-hidden="true" style="width:40px;height:40px">
-          <path d="M32 8l16 8v14c0 12-8 22-16 26-8-4-16-14-16-26V16l16-8z" fill="#f7c96b"/>
-          <path d="M32 14l11 5v11c0 9-5 17-11 20-6-3-11-11-11-20V19l11-5z" fill="#fff1bd"/>
-          <path d="M24 28h16v10H24z" fill="#2f4b5a"/>
-          <path d="M28 18h8v10h-8z" fill="#4ec8c4"/>
-        </svg>
+        <img class="icon-3d" src="icon.png" alt="7 Kebiasaan Anak Indonesia Hebat" style="width:64px;height:64px;object-fit:contain">
       </div>
       <div class="login-title">7 KEBIASAAN ANAK INDONESIA HEBAT</div>
       <div class="login-sub">Kelas V - 2026/2027</div>
@@ -3659,7 +3820,7 @@ select { -webkit-font-smoothing: antialiased; }
           <i data-lucide="arrow-left" style="width:16px;height:16px;margin-right:6px"></i> Kembali
         </button>
         <i data-lucide="layout-dashboard" style="width:22px;height:22px;color:#fff"></i>
-        <div class="teacher-topbar-title">Panel Guru Petualangan</div>
+        <div class="teacher-topbar-title">DASBOARD GURU</div>
         <div style="font-size: 0.65rem; color: #10b981; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;" id="sync-status">
           <span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%; display: inline-block; animation: pulse 2s infinite;"></span>
           SYNCED
@@ -3670,6 +3831,21 @@ select { -webkit-font-smoothing: antialiased; }
         <button class="btn-game btn-game-red btn-teacher-logout" id="btn-teacher-logout">
           <i data-lucide="log-out" style="width:14px;height:14px"></i> Keluar
         </button>
+      </div>
+
+      <div class="teacher-identity" id="header-teacher" aria-label="Identitas guru">
+        <div class="teacher-identity-item">
+          <span class="teacher-identity-label">Guru</span>
+          <strong id="teacher-name-display">-</strong>
+        </div>
+        <div class="teacher-identity-item">
+          <span class="teacher-identity-label">NIP</span>
+          <strong id="teacher-nip-display">-</strong>
+        </div>
+        <div class="teacher-identity-item">
+          <span class="teacher-identity-label">Tahun Ajaran</span>
+          <strong id="teacher-year-display">-</strong>
+        </div>
       </div>
       
       
@@ -4379,11 +4555,18 @@ function showPage(id) {
   const pages = ['page-opening','page-login','page-journal','page-teacher'];
   pages.forEach(pid=>{
     const el = document.getElementById(pid);
-    if (el) el.classList.remove('active');
+    if (el && el.classList.contains('active') && el.id !== id) {
+      el.classList.remove('page-enter');
+      el.classList.add('page-exit');
+      setTimeout(() => el.classList.remove('active', 'page-exit'), 300);
+    }
   });
   const targetPage = document.getElementById(id);
   if (targetPage) {
+    targetPage.classList.remove('page-exit');
     targetPage.classList.add('active');
+    targetPage.classList.add('page-enter');
+    setTimeout(() => targetPage.classList.remove('page-enter'), 380);
   }
   if (typeof lucide !== 'undefined') {
     setTimeout(()=>lucide.createIcons(), 50);
@@ -4434,6 +4617,28 @@ async function doStudentLogin() {
   hideLoading();
 }
 
+function setupJournalRecapScroll() {
+  const journalPage = document.getElementById('page-journal');
+  const recap = document.getElementById('monthly-recap');
+  if (!journalPage || !recap || journalPage.dataset.recapScrollReady === 'true') return;
+
+  let lastScrollTop = 0;
+  journalPage.addEventListener('scroll', () => {
+    const currentScrollTop = journalPage.scrollTop;
+    const passedRecap = currentScrollTop > recap.offsetTop + recap.offsetHeight;
+    const scrollingDown = currentScrollTop > lastScrollTop;
+
+    if (currentScrollTop <= 0 || (passedRecap && !scrollingDown)) {
+      recap.classList.remove('is-scroll-hidden');
+    } else if (passedRecap && scrollingDown) {
+      recap.classList.add('is-scroll-hidden');
+    }
+
+    lastScrollTop = currentScrollTop;
+  }, { passive: true });
+  journalPage.dataset.recapScrollReady = 'true';
+}
+
 async function openJournalPage() {
   const s = currentStudent;
   console.log(`📖 Opening journal page untuk ${s.name} (${s.id})`);
@@ -4454,6 +4659,11 @@ async function openJournalPage() {
   console.log(`✅ Entry data loaded: ${Object.keys(entryData).length} kebiasaan`);
   buildHabitGrid();
   await renderMonthlyRecap(today);
+  const journalPage = document.getElementById('page-journal');
+  const recap = document.getElementById('monthly-recap');
+  if (journalPage) journalPage.scrollTop = 0;
+  if (recap) recap.classList.remove('is-scroll-hidden');
+  setupJournalRecapScroll();
   updateHero();
   const total = calcTotal();
   console.log(`📊 Total XP sekarang: ${total}`);
@@ -4663,7 +4873,11 @@ function openPopup(h) {
   if (popupMax) popupMax.textContent = 'Maks '+h.maxPts+' XP';
   renderPopupBody(h);
   const popupHabit = document.getElementById('popup-habit');
-  if (popupHabit) popupHabit.classList.add('active');
+  if (popupHabit) {
+    clearTimeout(popupHabit._closeTimer);
+    popupHabit.classList.remove('is-closing');
+    popupHabit.classList.add('active');
+  }
   lucide.createIcons();
 }
 
@@ -4810,7 +5024,12 @@ async function autoSaveDraft(habitKey) {
 }
 
 function closePopup() {
-  document.getElementById('popup-habit').classList.remove('active');
+  const popupHabit = document.getElementById('popup-habit');
+  if (!popupHabit || !popupHabit.classList.contains('active')) return;
+  popupHabit.classList.add('is-closing');
+  popupHabit._closeTimer = setTimeout(() => {
+    popupHabit.classList.remove('active', 'is-closing');
+  }, 180);
   currentPopupHabit = null;
 }
 
@@ -4829,12 +5048,20 @@ function doSaveJournal() {
 function openHonestyModal() {
   document.getElementById('honesty-checkbox').checked = false;
   document.getElementById('btn-honesty-confirm').disabled = true;
-  document.getElementById('modal-honesty').classList.add('active');
+  const modal = document.getElementById('modal-honesty');
+  clearTimeout(modal._closeTimer);
+  modal.classList.remove('is-closing');
+  modal.classList.add('active');
   lucide.createIcons();
 }
 
 function closeHonestyModal() {
-  document.getElementById('modal-honesty').classList.remove('active');
+  const modal = document.getElementById('modal-honesty');
+  if (!modal || !modal.classList.contains('active')) return;
+  modal.classList.add('is-closing');
+  modal._closeTimer = setTimeout(() => {
+    modal.classList.remove('active', 'is-closing');
+  }, 180);
 }
 
 async function confirmSaveJournal() {
@@ -4902,11 +5129,11 @@ function showTeacherDashboard() {
   if (headerTeacher) {
     headerTeacher.style.display = headerTeacher.style.display || 'flex';
     const tNameEl = document.getElementById('teacher-name-display');
-    if (tNameEl) tNameEl.innerHTML = 'Guru: <span style="font-weight:800">' + (TEACHER_NAME || '-') + '</span>';
+    if (tNameEl) tNameEl.textContent = TEACHER_NAME || '-';
     const tNipEl = document.getElementById('teacher-nip-display');
-    if (tNipEl) tNipEl.innerHTML = 'NIP: <span style="font-weight:800">' + (TEACHER_NIP || '-') + '</span>';
+    if (tNipEl) tNipEl.textContent = TEACHER_NIP || '-';
     const tYearEl = document.getElementById('teacher-year-display');
-    if (tYearEl) tYearEl.innerHTML = 'T.A: <span style="font-weight:800">' + (SCHOOL_YEAR || '-') + '</span>';
+    if (tYearEl) tYearEl.textContent = SCHOOL_YEAR || '-';
   }
 
   // detailed identity card removed — nothing to populate here
@@ -4922,15 +5149,15 @@ function doTeacherLogin() {
   
   showTeacherDashboard();
   const topbarTitle = document.querySelector('.teacher-topbar-title');
-  if (topbarTitle) topbarTitle.textContent = TEACHER_NAME || 'Panel Guru Petualangan';
+  if (topbarTitle) topbarTitle.textContent = 'DASBOARD GURU';
 
   // Also populate teacher identity header if present (journal & teacher pages)
   const tNameEl = document.getElementById('teacher-name-display');
-  if (tNameEl) tNameEl.innerHTML = 'Guru: <span style="font-weight:800">' + (TEACHER_NAME || '-') + '</span>';
+  if (tNameEl) tNameEl.textContent = TEACHER_NAME || '-';
   const tNipEl = document.getElementById('teacher-nip-display');
-  if (tNipEl) tNipEl.innerHTML = 'NIP: <span style="font-weight:800">' + (TEACHER_NIP || '-') + '</span>';
+  if (tNipEl) tNipEl.textContent = TEACHER_NIP || '-';
   const tYearEl = document.getElementById('teacher-year-display');
-  if (tYearEl) tYearEl.innerHTML = 'T.A: <span style="font-weight:800">' + (SCHOOL_YEAR || '-') + '</span>';
+  if (tYearEl) tYearEl.textContent = SCHOOL_YEAR || '-';
 
   // detailed identity card removed — nothing to populate here
 
@@ -4945,14 +5172,17 @@ function doTeacherLogout() {
   const panel = document.getElementById('teacher-panel');
   const pinInput = document.getElementById('teacher-pin-input');
 
-  if (gate) gate.classList.remove('hidden');
-  if (panel) {
-    panel.classList.add('hidden');
-    panel.style.display = 'none';
-  }
   if (pinInput) pinInput.value = '';
   showPage('page-login');
   populateSelect();
+
+  setTimeout(() => {
+    if (gate) gate.classList.remove('hidden');
+    if (panel) {
+      panel.classList.add('hidden');
+      panel.style.display = 'none';
+    }
+  }, 300);
 }
 
 async function saveTeacherProfile() {
@@ -4982,7 +5212,7 @@ async function saveTeacherProfile() {
   saveLocalCache();
   await saveTeacherProfileToFirebase();
 
-  document.querySelector('.teacher-topbar-title').textContent = TEACHER_NAME;
+  document.querySelector('.teacher-topbar-title').textContent = 'DASBOARD GURU';
   toast('Pengaturan profil berhasil disimpan', 'success');
 }
 
@@ -5083,6 +5313,13 @@ function switchTeacherTab(tab) {
   document.getElementById('tab-students').style.display = tab==='students' ? 'block' : 'none';
   document.getElementById('tab-recap').style.display = tab==='recap' ? 'block' : 'none';
   document.getElementById('tab-settings').style.display = tab==='settings' ? 'block' : 'none';
+  const selectedTab = document.getElementById('tab-' + tab);
+  if (selectedTab) {
+    selectedTab.classList.remove('tab-enter');
+    void selectedTab.offsetWidth;
+    selectedTab.classList.add('tab-enter');
+    setTimeout(() => selectedTab.classList.remove('tab-enter'), 320);
+  }
   
   // Show/hide back button based on current tab
   const backBtn = document.getElementById('btn-teacher-back');
