@@ -3530,6 +3530,13 @@ select { -webkit-font-smoothing: antialiased; }
   transform: translateY(-18px);
   pointer-events: none;
 }
+.recap-chart-card { margin: 12px 0; padding: 12px; background: #fff; border: 1px solid var(--ui-border); border-radius: 16px; box-shadow: var(--ui-shadow); }
+.recap-chart-heading { color: var(--ui-ink); font-size: .7rem; font-weight: 700; margin-bottom: 10px; }
+.recap-chart { height: 112px; display: flex; align-items: end; gap: 4px; padding: 4px 2px 18px; border-bottom: 1px solid rgba(120,132,154,.2); }
+.recap-chart-bar { flex: 1; min-width: 4px; height: var(--bar-height); position: relative; background: linear-gradient(180deg, var(--ui-primary), #8f83ed); border-radius: 5px 5px 2px 2px; }
+.recap-chart-bar span { position: absolute; top: calc(100% + 5px); left: 50%; color: var(--ui-muted); font-size: .45rem; transform: translateX(-50%); }
+.recap-detail-toggle { width: 100%; min-height: 40px; padding: 9px 14px; font-size: .7rem; }
+.recap-details[hidden] { display: none; }
 
 /* LIGHT UI TRANSITIONS */
 .page.page-enter { z-index: 1; will-change: opacity, transform; animation: pageEnter .38s cubic-bezier(.22,1,.36,1) both; }
@@ -3644,6 +3651,35 @@ select { -webkit-font-smoothing: antialiased; }
 @keyframes mobilePopupExit {
   from { opacity: 1; transform: scale(1); }
   to { opacity: 0; transform: scale(.99); }
+}
+
+.loading-overlay {
+  background: rgba(15, 23, 42, .94);
+}
+.loading-spinner {
+  border-color: rgba(255, 255, 255, .24);
+  border-top-color: #35bdb1;
+  border-right-color: #f6d58a;
+  border-bottom-color: #f0aca4;
+  box-shadow: 0 0 0 4px rgba(53, 189, 177, .08), 0 0 18px rgba(53, 189, 177, .24);
+}
+.loading-text {
+  color: #fff;
+  text-shadow: 0 1px 8px rgba(53, 189, 177, .28);
+}
+
+#page-opening .opening-progress {
+  background: rgba(255, 255, 255, .3);
+  border: 1px solid rgba(255, 255, 255, .42);
+  box-shadow: inset 0 1px 3px rgba(36, 50, 74, .16);
+}
+#page-opening .opening-progress-bar {
+  background: linear-gradient(90deg, #35bdb1 0%, #f6d58a 52%, #f0aca4 100%);
+  box-shadow: 0 0 10px rgba(53, 189, 177, .35);
+}
+#page-opening .opening-status {
+  color: #fff;
+  text-shadow: 0 1px 7px rgba(40, 51, 74, .24);
 }
 </style>
 </head>
@@ -3990,8 +4026,17 @@ select { -webkit-font-smoothing: antialiased; }
           <div class="recap-stat"><div class="recap-stat-label">Hari Dicatat</div><div class="recap-stat-val" id="recap-days">0</div></div>
           <div class="recap-stat"><div class="recap-stat-label">Rata-rata XP</div><div class="recap-stat-val" id="recap-avg">0</div></div>
         </div>
+
+        <div class="recap-chart-card">
+          <div class="recap-chart-heading">Tren Jurnal Harian</div>
+          <div class="recap-chart" id="recap-chart" aria-label="Grafik tren jurnal harian"></div>
+        </div>
+
+        <button class="btn-game btn-game-cyan recap-detail-toggle" id="recap-detail-toggle" type="button">
+          <i data-lucide="list" style="width:15px;height:15px"></i> Lihat Detail Jurnal
+        </button>
         
-        <div class="table-wrap">
+        <div class="table-wrap recap-details" id="recap-details" hidden>
           <table>
             <thead>
               <tr>
@@ -4204,6 +4249,7 @@ let currentPopupHabit = null;
 let deleteTargetId = null;
 let activeTeacherTab = null;
 let recapFiltersReady = false;
+let recapDetailsVisible = false;
 let unsubSettings = null;
 
 // ============================================================
@@ -5727,6 +5773,19 @@ function calcEntryPts(entry) {
   return pts;
 }
 
+function renderRecapChart(rows) {
+  const chart = document.getElementById('recap-chart');
+  if (!chart) return;
+  const daily = {};
+  rows.forEach(row => { daily[row.date] = (daily[row.date] || 0) + row.pts; });
+  const dates = Object.keys(daily).sort();
+  const max = Math.max(...dates.map(date => daily[date]), 1);
+  chart.innerHTML = dates.map(date => {
+    const height = Math.max(8, Math.round(daily[date] / max * 82));
+    return `<div class="recap-chart-bar" style="--bar-height:${height}px" title="${date}: ${daily[date]} XP"><span>${date.slice(-2)}</span></div>`;
+  }).join('');
+}
+
 async function filterRecap() {
   const studentId = document.getElementById('recap-student-filter').value;
   const month = document.getElementById('recap-month-filter').value || monthStr();
@@ -5761,11 +5820,13 @@ async function filterRecap() {
   document.getElementById('recap-days').textContent = rows.length;
   const avg = rows.length ? Math.round(rows.reduce((a,r)=>a+r.pts,0)/rows.length) : 0;
   document.getElementById('recap-avg').textContent = avg;
+  renderRecapChart(rows);
 
   if (!rows.length) {
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:20px">Tidak ada data rekap</td></tr>';
     return;
   }
+  if (!recapDetailsVisible) return;
   rows.forEach(r=>{
     const g = grade(r.pts);
     const tr = document.createElement('tr');
@@ -6684,9 +6745,20 @@ function setupEventListeners() {
   const recapStudentFilter = document.getElementById('recap-student-filter');
   const recapMonthFilter = document.getElementById('recap-month-filter');
   const btnDownloadPdf = document.getElementById('btn-download-pdf');
+  const recapDetailToggle = document.getElementById('recap-detail-toggle');
   
   if (recapStudentFilter) recapStudentFilter.addEventListener('change', filterRecap);
   if (recapMonthFilter) recapMonthFilter.addEventListener('change', filterRecap);
+  if (recapDetailToggle) recapDetailToggle.addEventListener('click', () => {
+    recapDetailsVisible = !recapDetailsVisible;
+    const details = document.getElementById('recap-details');
+    if (details) details.hidden = !recapDetailsVisible;
+    recapDetailToggle.innerHTML = recapDetailsVisible
+      ? '<i data-lucide="chevron-up" style="width:15px;height:15px"></i> Sembunyikan Detail'
+      : '<i data-lucide="list" style="width:15px;height:15px"></i> Lihat Detail Jurnal';
+    filterRecap();
+    if (typeof lucide !== 'undefined') lucide.createIcons({ root: recapDetailToggle });
+  });
   if (btnDownloadPdf) btnDownloadPdf.addEventListener('click', generatePDF);
 
   console.log('✅ Bindings successfully registered');
