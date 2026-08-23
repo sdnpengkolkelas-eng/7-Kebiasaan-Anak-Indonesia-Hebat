@@ -3544,7 +3544,7 @@ select { -webkit-font-smoothing: antialiased; }
 .modal-overlay.active .modal-card { will-change: opacity, transform; animation: popupEnter .36s cubic-bezier(.22,1,.36,1) both; }
 .modal-overlay.is-closing .modal-card { will-change: opacity, transform; animation: popupExit .24s cubic-bezier(.4,0,.2,1) both; }
 .loading-overlay.active { will-change: opacity; animation: overlayEnter .24s cubic-bezier(.22,1,.36,1) both; }
-.tab-content.tab-enter { will-change: opacity, transform; animation: tabEnter .24s cubic-bezier(.22,1,.36,1) both; }
+.tab-content.tab-enter { animation: none; }
 
 @keyframes pageEnter {
   from { opacity: 0; transform: scale(.985) translateY(8px); }
@@ -5383,12 +5383,6 @@ function switchTeacherTab(tab) {
   document.getElementById('tab-recap').style.display = tab==='recap' ? 'block' : 'none';
   document.getElementById('tab-settings').style.display = tab==='settings' ? 'block' : 'none';
   const selectedTab = document.getElementById('tab-' + tab);
-  if (selectedTab) {
-    selectedTab.classList.remove('tab-enter');
-    void selectedTab.offsetWidth;
-    selectedTab.classList.add('tab-enter');
-    setTimeout(() => selectedTab.classList.remove('tab-enter'), 240);
-  }
   
   // Show/hide back button based on current tab
   const backBtn = document.getElementById('btn-teacher-back');
@@ -5396,19 +5390,22 @@ function switchTeacherTab(tab) {
     backBtn.style.display = tab === 'overview' ? 'none' : 'inline-flex';
   }
   
-  if (tab==='overview') renderOverview();
-  if (tab==='students') {
-    const searchInput = document.getElementById('student-search');
-    renderStudents(searchInput ? searchInput.value : '');
-  }
-  if (tab==='recap') { populateRecapFilter().then(()=>filterRecap()); }
-  if (tab==='settings') {
-    document.getElementById('teacher-profile-name').value = TEACHER_NAME;
-    document.getElementById('teacher-profile-nip').value = TEACHER_NIP;
-    document.getElementById('teacher-profile-school-year').value = SCHOOL_YEAR;
-    document.getElementById('teacher-profile-city').value = CITY_NAME;
-  }
-  if (typeof lucide !== 'undefined' && selectedTab) lucide.createIcons({ root: selectedTab });
+  requestAnimationFrame(() => {
+    if (activeTeacherTab !== tab) return;
+    if (tab==='overview') renderOverview();
+    if (tab==='students') {
+      const searchInput = document.getElementById('student-search');
+      renderStudents(searchInput ? searchInput.value : '');
+    }
+    if (tab==='recap') { populateRecapFilter().then(()=>filterRecap()); }
+    if (tab==='settings') {
+      document.getElementById('teacher-profile-name').value = TEACHER_NAME;
+      document.getElementById('teacher-profile-nip').value = TEACHER_NIP;
+      document.getElementById('teacher-profile-school-year').value = SCHOOL_YEAR;
+      document.getElementById('teacher-profile-city').value = CITY_NAME;
+    }
+    if (typeof lucide !== 'undefined' && selectedTab) lucide.createIcons({ root: selectedTab });
+  });
 }
 
 // ============================================================
