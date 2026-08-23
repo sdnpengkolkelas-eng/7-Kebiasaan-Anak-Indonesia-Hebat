@@ -4203,6 +4203,7 @@ let entryData = {};
 let currentPopupHabit = null;
 let deleteTargetId = null;
 let activeTeacherTab = null;
+let recapFiltersReady = false;
 let unsubSettings = null;
 
 // ============================================================
@@ -4336,6 +4337,7 @@ async function getStudents() {
 
 async function saveStudents(students) {
   cachedStudents = students;
+  recapFiltersReady = false;
   saveLocalCache();
   
   if (!window.rtdb) {
@@ -5665,6 +5667,9 @@ async function doDeleteStudent() {
 // ============================================================
 async function populateRecapFilter() {
   const sel = document.getElementById('recap-student-filter');
+  const monthSel = document.getElementById('recap-month-filter');
+  if (!sel || !monthSel) return;
+  if (recapFiltersReady && sel.options.length === cachedStudents.length + 1 && monthSel.value) return;
   const prev = sel.value;
   sel.innerHTML = '<option value="">Semua Siswa</option>';
   const students = await getStudents();
@@ -5676,7 +5681,6 @@ async function populateRecapFilter() {
   sel.value = prev;
   
   // Populate month dropdown with Indonesian month names
-  const monthSel = document.getElementById('recap-month-filter');
   const prevMonth = monthSel.value;
   monthSel.innerHTML = '<option value="">Pilih Bulan</option>';
   
@@ -5703,6 +5707,7 @@ async function populateRecapFilter() {
   } else {
     monthSel.value = monthStr();
   }
+  recapFiltersReady = true;
 }
 
 function calcEntryPts(entry) {
@@ -5730,26 +5735,27 @@ async function filterRecap() {
   const tbody = document.getElementById('recap-tbody');
   tbody.innerHTML = '';
 
-  let rows = [];
-  if (studentId) {
-    Object.keys(journals).forEach(k=>{
-      if (!k.startsWith(studentId+'_')) return;
-      const date = k.replace(studentId+'_','');
-      if (!date.startsWith(month)) return;
-      const pts = calcEntryPts(journals[k]);
-      rows.push({studentId, date, pts, entry: journals[k]});
+  const studentsById = Object.fromEntries(students.map(s => [s.id, s]));
+  const prefix = studentId ? studentId + '_' : '';
+  const rows = [];
+  Object.keys(journals).forEach(key => {
+    if (prefix && !key.startsWith(prefix)) return;
+    const separator = key.indexOf('_');
+    if (separator < 1) return;
+    const rowStudentId = key.slice(0, separator);
+    const date = key.slice(separator + 1);
+    if (!date.startsWith(month)) return;
+    const student = studentsById[rowStudentId];
+    if (!student) return;
+    rows.push({
+      studentId: rowStudentId,
+      studentName: student.name,
+      kelas: student.kelas,
+      date,
+      pts: calcEntryPts(journals[key]),
+      entry: journals[key]
     });
-  } else {
-    students.forEach(s=>{
-      Object.keys(journals).forEach(k=>{
-        if (!k.startsWith(s.id+'_')) return;
-        const date = k.replace(s.id+'_','');
-        if (!date.startsWith(month)) return;
-        const pts = calcEntryPts(journals[k]);
-        rows.push({studentId:s.id, studentName:s.name, kelas:s.kelas, date, pts, entry:journals[k]});
-      });
-    });
-  }
+  });
   rows.sort((a,b)=>a.date.localeCompare(b.date));
 
   document.getElementById('recap-days').textContent = rows.length;
@@ -5801,7 +5807,7 @@ async function filterRecap() {
     tbody.appendChild(tr);
   });
   
-  lucide.createIcons();
+  if (typeof lucide !== 'undefined') lucide.createIcons({ root: tbody });
 }
 
 // ============================================================
@@ -6215,6 +6221,7 @@ async function setupRealTimeListeners() {
       const newStudents = buildStudentsArrayFromSnapshot(snap.val());
       console.log(`📥 Siswa diperbarui dari Firebase: ${newStudents.length} siswa`);
       cachedStudents = newStudents;
+      recapFiltersReady = false;
       saveLocalCache();
       scheduleRefreshActiveViews();
     }, (error) => {
