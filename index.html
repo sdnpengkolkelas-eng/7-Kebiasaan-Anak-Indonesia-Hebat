@@ -64,7 +64,8 @@ body{
   min-height: 100vh;
   min-height: 100dvh;
   -webkit-tap-highlight-color: transparent;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
   display: flex;
   justify-content: center;
   align-items: stretch;
@@ -114,6 +115,27 @@ body::after {
   flex-direction: column;
   z-index: 1;
 }
+
+@media (min-width: 768px) {
+  body {
+    padding: 18px;
+    align-items: flex-start;
+    background: linear-gradient(135deg, #e2e8f0 0%, #f8fafc 100%);
+  }
+
+  #app-container {
+    max-width: 1280px;
+    width: 100%;
+    height: calc(100vh - 36px);
+    border-radius: 24px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+  }
+
+  #page-teacher .tab-content {
+    padding: 20px 20px 28px;
+  }
+}
 #app-container::before {
   content: '';
   position: absolute;
@@ -148,8 +170,42 @@ body::after {
 }
 .page.active{display:flex!important;}
 #page-teacher {
-  overflow: hidden;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
   position: relative;
+}
+#page-teacher .tab-content {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+#page-teacher .table-wrap {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  max-width: 100%;
+  width: 100%;
+}
+#page-teacher table {
+  min-width: 760px;
+  width: 100%;
+}
+#page-teacher .student-actions-cell {
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  #page-teacher {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  #page-teacher .tab-content {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+  #page-teacher .table-wrap {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
 }
 
 /* GAME BUTTONS */
@@ -1480,6 +1536,42 @@ body::after {
   background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
 }
 
+#tab-students {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+#tab-students .table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+
+#tab-students table {
+  width: 100%;
+  min-width: 760px;
+  table-layout: auto;
+}
+
+#tab-students .student-actions-cell {
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+#tab-students .student-actions-cell .btn-icon {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  flex: 0 0 auto;
+}
+
 /* OVERVIEW GRIDS */
 .stats-grid {
   display: grid;
@@ -1660,6 +1752,7 @@ body::after {
   gap: 10px;
   margin-bottom: 16px;
   flex-wrap: wrap;
+  align-items: center;
 }
 .table-wrap {
   width: 100%;
@@ -1669,9 +1762,11 @@ body::after {
   border: 1px solid rgba(31,41,55,0.08);
   box-shadow: 0 8px 20px rgba(31,41,55,0.05);
   -webkit-overflow-scrolling: touch;
+  position: relative;
 }
 .search-input {
-  flex: 1;
+  flex: 1 1 180px;
+  min-width: 0;
   padding: 12px 16px;
   border-radius: 9999px;
   border: 1px solid rgba(31,41,55,0.08);
@@ -1707,7 +1802,7 @@ table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.85rem;
-  min-width: 480px;
+  min-width: 760px;
 }
 thead th {
   background: #f8fafc;
@@ -1719,6 +1814,10 @@ thead th {
   border-bottom: 1px solid rgba(31,41,55,0.08);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+thead th:last-child {
+  text-align: center;
+  min-width: 120px;
 }
 tbody tr {
   transition: all 0.2s;
@@ -1737,6 +1836,10 @@ tbody tr:last-child td { border-bottom: none; }
 .student-actions-cell {
   display: flex;
   gap: 8px;
+  justify-content: center;
+  align-items: center;
+  min-width: 120px;
+  white-space: nowrap;
 }
 .btn-icon {
   background: #f8fafc;
@@ -1745,9 +1848,12 @@ tbody tr:last-child td { border-bottom: none; }
   cursor: pointer;
   padding: 8px;
   border-radius: 10px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
   transition: all 0.2s;
 }
 .btn-icon:hover {
@@ -2419,6 +2525,95 @@ tbody td { color: var(--teacher-ink); border-bottom-color: rgba(40,51,74,.08); }
   #sync-status { font-size: .55rem !important; }
   .tab-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tab-content { padding: 14px 12px; }
+  .search-add-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-input,
+  .btn-add {
+    width: 100%;
+  }
+  .btn-add {
+    justify-content: center;
+  }
+  .table-wrap {
+    border-radius: 14px;
+  }
+  table {
+    min-width: 720px;
+  }
+  .student-actions-cell {
+    min-width: 104px;
+  }
+}
+
+@media (min-width: 768px) {
+  .tab-content {
+    padding-left: 22px;
+    padding-right: 22px;
+  }
+  .table-wrap {
+    min-height: 0;
+  }
+  table {
+    min-width: 820px;
+  }
+}
+
+#page-teacher,
+#page-teacher #teacher-panel,
+#page-teacher .tab-content {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+#page-teacher .table-wrap {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  max-width: 100%;
+}
+#page-teacher table {
+  width: 100%;
+  min-width: 760px;
+  table-layout: auto;
+}
+#page-teacher .student-actions-cell {
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+  white-space: nowrap;
+}
+#page-teacher .student-actions-cell .btn-icon {
+  flex: 0 0 auto;
+}
+
+@media (min-width: 768px) {
+  #page-teacher,
+  #page-teacher #teacher-panel,
+  #page-teacher .tab-content {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+  }
+
+  #page-teacher .table-wrap {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+  }
+
+  #page-teacher table {
+    min-width: 820px;
+  }
+}
+
+@media (max-width: 560px) {
+  #page-teacher .table-wrap {
+    overflow-x: auto !important;
+  }
+
+  #page-teacher .student-actions-cell {
+    min-width: 110px;
+  }
 }
 
 /* DESIGN SYSTEM TOKENS: VIBRANT MODERN SOFT UI */
@@ -3087,8 +3282,16 @@ body:has(#page-journal.active),
 body:has(#page-teacher.active) { background: var(--ui-bg) !important; }
 #app-container {
   max-width: 520px;
+  width: 100%;
   border: 0;
   box-shadow: 0 18px 45px rgba(35, 40, 68, .12);
+}
+
+@media (min-width: 768px) {
+  #app-container {
+    max-width: 1280px;
+    width: 100%;
+  }
 }
 
 .opening-content,
