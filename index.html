@@ -5178,14 +5178,36 @@ function hideLoading() {
 
 async function checkForAppUpdate() {
   try {
-    const versionUrl = './version.json?t=' + Date.now();
-    const response = await fetch(versionUrl, { cache: 'no-store' });
-    if (!response.ok) {
-      console.warn('⚠️ Gagal memeriksa versi aplikasi:', response.status);
+    const githubBase = 'https://raw.githubusercontent.com/sdnpengkolkelas-eng/7-Kebiasaan-Anak-Indonesia-Hebat/';
+    const candidateUrls = [
+      './version.json?t=' + Date.now(),
+      githubBase + 'main/version.json?t=' + Date.now(),
+      githubBase + 'master/version.json?t=' + Date.now()
+    ];
+
+    let data = null;
+    let lastError = null;
+
+    for (const versionUrl of candidateUrls) {
+      try {
+        const response = await fetch(versionUrl, { cache: 'no-store' });
+        if (!response.ok) {
+          lastError = new Error('HTTP ' + response.status);
+          continue;
+        }
+
+        data = await response.json();
+        break;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (!data) {
+      console.warn('⚠️ Gagal memeriksa versi aplikasi dari semua sumber:', lastError);
       return;
     }
 
-    const data = await response.json();
     const remoteVersion = data && data.version ? String(data.version) : '';
     if (!remoteVersion) {
       console.warn('⚠️ version.json tidak memiliki field version');
