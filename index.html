@@ -1438,6 +1438,7 @@ body::after {
   padding: 14px 16px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   border: 1px solid rgba(41, 157, 184, 0.16);
   border-radius: 0 0 22px 22px;
@@ -1447,14 +1448,51 @@ body::after {
   flex-shrink: 0;
   z-index: 11;
 }
+.teacher-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.teacher-topbar-brand {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1f78ad 0%, #2ca9d8 100%);
+  border: 1px solid rgba(255,255,255,0.28);
+  box-shadow: 0 10px 18px rgba(44,169,216,0.18);
+  flex-shrink: 0;
+}
+.teacher-topbar-brand i[data-lucide] {
+  width: 20px !important;
+  height: 20px !important;
+  color: #ffffff !important;
+}
+.teacher-topbar-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.teacher-topbar-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 .teacher-topbar-title {
   flex: 1;
   min-width: 0;
   font-weight: 800;
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   color: #183b4c;
   font-family: var(--font-title);
-  letter-spacing: 0.5px;
+  letter-spacing: -0.01em;
   text-shadow: none;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -2120,9 +2158,9 @@ tbody tr:last-child td { border-bottom: none; }
   min-width: 250px;
   padding: 28px 26px 24px;
   border-radius: 32px;
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow: 0 24px 54px rgba(13, 73, 102, 0.24);
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(15, 76, 106, 0.14);
+  box-shadow: 0 24px 54px rgba(13, 73, 102, 0.18);
 }
 .loading-spinner {
   width: 62px;
@@ -2149,7 +2187,7 @@ tbody tr:last-child td { border-bottom: none; }
   50% { opacity: 0.4; }
 }
 .loading-text {
-  color: #ffffff !important;
+  color: #0f4c6a !important;
   margin-top: 18px;
   font-family: var(--font-title);
   font-size: 0.9rem;
@@ -2479,8 +2517,17 @@ body:has(#page-teacher.active)::after { display: none; }
 .teacher-topbar > i[data-lucide] { color: #1a7ea7 !important; background: #dff5fb; border-radius: 12px; padding: 7px; width: 36px !important; height: 36px !important; }
 .teacher-topbar-title { color: #183b4c; text-shadow: none; }
 .teacher-topbar-sub { color: #1a7ea7; }
-#sync-status { color: #208e78 !important; background: #a8dfd5; padding: 7px 10px; border-radius: 999px; }
-#sync-status span { background: #208e78 !important; }
+#sync-status {
+  color: #0f4c6a !important;
+  background: transparent !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  font-weight: 600;
+  letter-spacing: 0;
+  box-shadow: none !important;
+}
+#sync-status span { display: none !important; }
 .tab-bar {
   background: linear-gradient(180deg, #dff6fd 0%, #cfeef9 100%);
   border-bottom: 0;
@@ -2511,14 +2558,14 @@ body:has(#page-teacher.active)::after { display: none; }
   border: 0;
   box-shadow: 10px 10px 22px rgba(44,169,216,.12), -7px -7px 16px rgba(255,255,255,.7);
 }
-.stat-card { border-radius: 24px; padding: 16px; background: linear-gradient(135deg, #dff6fd 0%, #cfeef9 100%); }
-.stat-card:nth-child(2) { background: linear-gradient(135deg, #dff4ee 0%, #cdeee4 100%); }
-.stat-card:nth-child(3) { background: linear-gradient(135deg, #eae5ff 0%, #ded7ff 100%); }
-.stat-card:nth-child(4) { background: linear-gradient(135deg, #fff2d8 0%, #f4e0b8 100%); }
+.stat-card { border-radius: 20px; padding: 14px 16px; background: linear-gradient(135deg, #8ccaf0 0%, #5aa3d8 100%); }
+.stat-card:nth-child(2) { background: linear-gradient(135deg, #78b8e8 0%, #4a9acb 100%); }
+.stat-card:nth-child(3) { background: linear-gradient(135deg, #67afd6 0%, #3d8ec0 100%); }
+.stat-card:nth-child(4) { background: linear-gradient(135deg, #5aa1d3 0%, #2d7db5 100%); }
 .stat-card::before { height: 0; }
 .stat-card::after { background: rgba(255,255,255,.16); }
-.stat-label { color: #0d4a69; }
-.stat-val { color: #0d4a69; text-shadow: none; }
+.stat-label { color: #edf9ff; }
+.stat-val { color: #ffffff; text-shadow: none; }
 .participation-card { background: #a9dce9; border-radius: 26px; padding: 20px; }
 .participation-card::after { background: rgba(255,255,255,.18); }
 .participation-header { color: var(--teacher-ink); }
@@ -2581,14 +2628,23 @@ tbody td { color: var(--teacher-ink); border-bottom-color: rgba(40,51,74,.08); }
   .tab-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tab-content { padding: 14px 12px; }
   .search-add-bar {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
   }
-  .search-input,
-  .btn-add {
-    width: 100%;
+  .search-input {
+    width: auto;
+    flex: 1 1 auto;
+    min-height: 42px;
+    padding: 10px 12px;
+    font-size: 0.85rem;
   }
   .btn-add {
+    width: auto;
+    flex: 0 0 auto;
+    min-height: 42px;
+    padding: 10px 14px;
+    font-size: 0.8rem;
     justify-content: center;
   }
   .table-wrap {
@@ -2754,7 +2810,6 @@ tbody td { color: var(--teacher-ink); border-bottom-color: rgba(40,51,74,.08); }
 .habit-tile::before { display: none; }
 .habit-badge,
 .quest-badge,
-#sync-status,
 .grade-badge { border-radius: 999px; }
 .btn-game,
 .btn-cancel,
@@ -2920,12 +2975,20 @@ body { background: #f7f8fc; color: #24324a; }
   min-height: 72px;
 }
 #page-teacher .teacher-topbar > i[data-lucide] {
-  color: #1a7ea7 !important;
-  background: #dff5fb;
-  border-radius: 12px;
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #1f78ad 0%, #2ca9d8 100%);
+  border-radius: 14px;
   padding: 7px;
   width: 36px !important;
   height: 36px !important;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 8px 18px rgba(44, 169, 216, 0.22);
+}
+#page-teacher .teacher-topbar .btn-game {
+  min-height: 40px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  border-radius: 12px;
 }
 #page-teacher .teacher-topbar-title {
   color: #183b4c !important;
@@ -3570,11 +3633,11 @@ body:has(#page-teacher.active) { background: var(--ui-bg) !important; }
   width: 116px;
   height: 116px;
   margin-bottom: 22px;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  overflow: visible;
+  background: linear-gradient(145deg, rgba(255,255,255,0.26), rgba(255,255,255,0.08));
+  border: 1px solid rgba(255,255,255,0.28);
+  border-radius: 30px;
+  box-shadow: 0 18px 28px rgba(19, 119, 151, 0.18);
+  overflow: hidden;
   transform: none;
   animation: loginLogoEntrance .8s cubic-bezier(.2,.8,.2,1) both;
 }
@@ -3586,6 +3649,7 @@ body:has(#page-teacher.active) { background: var(--ui-bg) !important; }
   width: 112px !important;
   height: 112px !important;
   object-fit: contain;
+  border-radius: 26px;
   filter: drop-shadow(0 14px 10px rgba(42, 31, 93, .22)) drop-shadow(0 5px 18px rgba(53, 189, 177, .22));
   animation: loginLogoFloat 3.8s ease-in-out .8s infinite;
 }
@@ -3848,12 +3912,12 @@ body:has(#page-teacher.active) { background: var(--ui-bg) !important; }
   border-radius: var(--ui-radius);
   box-shadow: 0 10px 22px rgba(44,169,216,.10);
 }
-.stat-card:nth-child(1), .recap-stat:nth-child(1) { background: linear-gradient(135deg, #dff6fd 0%, #cfeef9 100%); }
-.stat-card:nth-child(2), .recap-stat:nth-child(2) { background: linear-gradient(135deg, #dff4ee 0%, #cdeee4 100%); }
-.stat-card:nth-child(3) { background: linear-gradient(135deg, #f1edff 0%, #e7e0ff 100%); }
-.stat-card:nth-child(4), .participation-card { background: linear-gradient(135deg, #fff2d8 0%, #f4e0b8 100%); }
+.stat-card:nth-child(1), .recap-stat:nth-child(1) { background: linear-gradient(135deg, #8ccaf0 0%, #5aa3d8 100%); }
+.stat-card:nth-child(2), .recap-stat:nth-child(2) { background: linear-gradient(135deg, #78b8e8 0%, #4a9acb 100%); }
+.stat-card:nth-child(3) { background: linear-gradient(135deg, #67afd6 0%, #3d8ec0 100%); }
+.stat-card:nth-child(4) { background: linear-gradient(135deg, #5aa1d3 0%, #2d7db5 100%); }
 .stat-card .stat-label, .stat-card .stat-val,
-.participation-header, .recap-stat-label, .recap-stat-val { color: #0d4a69 !important; text-shadow: none; }
+.participation-header, .recap-stat-label, .recap-stat-val { color: #edf9ff !important; text-shadow: none; }
 .leader-item { background: #fff; }
 .leader-name, .leader-class { color: var(--ui-ink); }
 .leader-class, .stat-label, .recap-stat-label { color: #4d6a82; }
@@ -3867,24 +3931,25 @@ tbody td { color: var(--ui-ink); border-bottom-color: var(--ui-border); }
 .btn-icon:hover { background: #ebe9ff; color: var(--ui-primary); }
 
 #page-teacher .stat-card:nth-child(1),
-#page-teacher .recap-stat:nth-child(1) { background: linear-gradient(135deg, #dff6fd 0%, #cfeef9 100%) !important; }
+#page-teacher .recap-stat:nth-child(1) { background: linear-gradient(135deg, #8ccaf0 0%, #5aa3d8 100%) !important; }
 #page-teacher .stat-card:nth-child(2),
-#page-teacher .recap-stat:nth-child(2) { background: linear-gradient(135deg, #dff4ee 0%, #cdeee4 100%) !important; }
-#page-teacher .stat-card:nth-child(3) { background: linear-gradient(135deg, #f1edff 0%, #e7e0ff 100%) !important; }
-#page-teacher .stat-card:nth-child(4),
-#page-teacher .participation-card { background: linear-gradient(135deg, #fff2d8 0%, #fbecc9 100%) !important; }
+#page-teacher .recap-stat:nth-child(2) { background: linear-gradient(135deg, #78b8e8 0%, #4a9acb 100%) !important; }
+#page-teacher .stat-card:nth-child(3) { background: linear-gradient(135deg, #67afd6 0%, #3d8ec0 100%) !important; }
+#page-teacher .stat-card:nth-child(4) { background: linear-gradient(135deg, #5aa1d3 0%, #2d7db5 100%) !important; }
 #page-teacher .stat-card,
 #page-teacher .participation-card,
 #page-teacher .recap-stat { box-shadow: 0 8px 18px rgba(35, 40, 68, .1); }
 #page-teacher #sync-status {
-  color: #17834a !important;
-  background: #e5f7ed !important;
+  color: #0f4c6a !important;
+  background: transparent !important;
+  border: 0 !important;
   font-size: .58rem !important;
-  font-weight: 700 !important;
-  padding: 6px 9px !important;
-  letter-spacing: .04em;
+  font-weight: 600 !important;
+  padding: 0 !important;
+  letter-spacing: 0;
+  box-shadow: none !important;
 }
-#page-teacher #sync-status span { background: #31C16B !important; }
+#page-teacher #sync-status span { display: none !important; }
 
 .modal-overlay { background: rgba(26, 29, 30, .32); }
 .loading-overlay {
@@ -4418,22 +4483,29 @@ select { -webkit-font-smoothing: antialiased; }
 
     <!-- PANEL -->
     <div id="teacher-panel" class="hidden" style="width: 100%;">
-      <div class="teacher-topbar">
-        <button class="btn-game btn-game-cyan" id="btn-teacher-back" style="padding: 8px 12px; font-size: 0.85rem; display: none;">
-          <i data-lucide="arrow-left" style="width:16px;height:16px;margin-right:6px"></i> Kembali
-        </button>
-        <i data-lucide="layout-dashboard" style="width:22px;height:22px;color:#fff"></i>
-        <div class="teacher-topbar-title" style="color: #0d4a69 !important;">DASBOARD GURU</div>
-        <div style="font-size: 0.65rem; color: #10b981; font-weight: 700; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;" id="sync-status">
-          <span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%; display: inline-block; animation: pulse 2s infinite;"></span>
-          SYNCED
+      <div class="teacher-topbar" style="background: linear-gradient(180deg, #edf8ff 0%, #f5fbff 100%); border: 1px solid rgba(41,157,184,0.22); border-radius: 0 0 24px 24px; box-shadow: 0 16px 32px rgba(39,157,184,0.12); min-height: 72px;">
+        <div class="teacher-topbar-left">
+          <button class="btn-game btn-game-cyan" id="btn-teacher-back" style="padding: 8px 12px; font-size: 0.85rem; display: none;">
+            <i data-lucide="arrow-left" style="width:16px;height:16px;margin-right:6px"></i> Kembali
+          </button>
+          <div class="teacher-topbar-brand">
+            <i data-lucide="layout-dashboard" style="width:20px;height:20px;color:#fff"></i>
+          </div>
+          <div class="teacher-topbar-copy">
+            <div class="teacher-topbar-title" style="color:#0d4a69 !important;font-weight:800 !important;letter-spacing:-0.01em !important;text-shadow:none !important;">DASBOARD GURU</div>
+          </div>
         </div>
-        <button class="btn-game btn-game-cyan" id="btn-teacher-sync" title="Sinkronisasi ulang data dari cloud" style="padding: 8px 12px; font-size: 0.85rem;">
-          <i data-lucide="refresh-cw" style="width:14px;height:14px"></i>
-        </button>
-        <button class="btn-game btn-game-red btn-teacher-logout" id="btn-teacher-logout">
-          <i data-lucide="log-out" style="width:14px;height:14px"></i> Keluar
-        </button>
+        <div class="teacher-topbar-controls">
+          <div style="font-size: 0.65rem; color: #0f4c6a; font-weight: 600; letter-spacing: 0; display: inline-flex; align-items: center; background: transparent; border: 0; border-radius: 0; padding: 0;" id="sync-status">
+            SYNCED
+          </div>
+          <button class="btn-game btn-game-cyan" id="btn-teacher-sync" title="Sinkronisasi ulang data dari cloud" style="padding: 8px 12px; font-size: 0.85rem;">
+            <i data-lucide="refresh-cw" style="width:14px;height:14px"></i>
+          </button>
+          <button class="btn-game btn-game-red btn-teacher-logout" id="btn-teacher-logout">
+            <i data-lucide="log-out" style="width:14px;height:14px"></i> Keluar
+          </button>
+        </div>
       </div>
 
       <div class="teacher-identity" id="header-teacher" aria-label="Identitas guru">
@@ -6804,34 +6876,22 @@ let syncStatusTimeout = null;
 function updateSyncStatus(status = 'SYNCED', color = '#10b981') {
   const statusEl = document.getElementById('sync-status');
   if (!statusEl) return;
-  
+
   // Clear previous timeout
   if (syncStatusTimeout) clearTimeout(syncStatusTimeout);
-  
-  const dot = statusEl.querySelector('span');
-  if (dot) {
-    dot.style.background = color;
-    if (status === 'SYNCING') {
-      dot.style.animation = 'pulse 1s infinite';
-    } else {
-      dot.style.animation = 'pulse 2s infinite';
-    }
-  }
-  
-  statusEl.textContent = '';
-  const dotEl = document.createElement('span');
-  dotEl.style.width = '6px';
-  dotEl.style.height = '6px';
-  dotEl.style.background = color;
-  dotEl.style.borderRadius = '50%';
-  dotEl.style.display = 'inline-block';
-  dotEl.style.animation = status === 'SYNCING' ? 'pulse 1s infinite' : 'pulse 2s infinite';
-  statusEl.appendChild(dotEl);
-  
-  const textEl = document.createElement('span');
-  textEl.textContent = status;
-  statusEl.appendChild(textEl);
-  
+
+  // Remove any leftover dot/span node so the status is rendered as plain text only
+  statusEl.querySelectorAll('span').forEach(el => el.remove());
+
+  statusEl.textContent = status;
+  statusEl.style.color = '#0f4c6a';
+  statusEl.style.background = 'transparent';
+  statusEl.style.border = '0';
+  statusEl.style.borderRadius = '0';
+  statusEl.style.padding = '0';
+  statusEl.style.fontWeight = '600';
+  statusEl.style.letterSpacing = '0';
+
   // Auto-revert to SYNCED after 3 seconds if needed
   if (status === 'SYNCING') {
     syncStatusTimeout = setTimeout(() => {
