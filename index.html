@@ -5438,7 +5438,19 @@ select { -webkit-font-smoothing: antialiased; }
 <script type="module">
   // Import Firebase modules
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-  import { getDatabase, ref, set, get, child, remove, onValue, update } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+  import { getDatabase, ref, set, get, child, remove, onValue, update, query, equalTo, orderByChild } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInAnonymously,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut,
+    deleteUser,
+    updatePassword,
+    EmailAuthProvider,
+    reauthenticateWithCredential
+  } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
   // ============================================================
   // FIREBASE CONFIGURATION
@@ -5457,10 +5469,27 @@ select { -webkit-font-smoothing: antialiased; }
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
+  const auth = getAuth(app);
+  const provisioningApp = initializeApp(firebaseConfig, 'studentProvisioning');
+  const provisioningAuth = getAuth(provisioningApp);
 
   // Make RTDB available globally
   window.rtdb = db;
-  window.rtdbModules = { ref, set, get, child, remove, onValue, update };
+  window.rtdbModules = { ref, set, get, child, remove, onValue, update, query, equalTo, orderByChild };
+  window.firebaseAuth = auth;
+  window.firebaseAuthModules = {
+    onAuthStateChanged,
+    signInAnonymously,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut,
+    deleteUser,
+    updatePassword,
+    EmailAuthProvider,
+    reauthenticateWithCredential
+  };
+  window.firebaseProvisioningAuth = provisioningAuth;
+  window.firebaseTeacherUid = 'YOmcS0HkFuVrZypsEPuxE1PPHNy2';
   
   console.log('✅ Firebase Realtime Database initialized successfully');
 </script>
@@ -5555,8 +5584,8 @@ select { -webkit-font-smoothing: antialiased; }
       </div>
       
       <div class="form-group">
-        <label>Kunci Keamanan (PIN)</label>
-        <input type="password" id="login-pin" placeholder="Masukkan PIN">
+        <label>Password Siswa</label>
+        <input type="password" id="login-pin" placeholder="Masukkan password">
       </div>
       
       <button class="btn-game btn-game-cyan btn-login-submit" id="btn-student-login">
@@ -5635,8 +5664,12 @@ select { -webkit-font-smoothing: antialiased; }
           <div class="gate-sub">Masukkan password rahasia untuk membuka portal panel</div>
           
           <div class="form-group">
+            <label>Email Akun Guru</label>
+            <input type="email" id="teacher-email-input" placeholder="Masukkan email akun guru" autocomplete="username">
+          </div>
+          <div class="form-group">
             <label>Password Guru</label>
-            <input type="password" id="teacher-pin-input" placeholder="Masukkan password">
+            <input type="password" id="teacher-pin-input" placeholder="Masukkan password" autocomplete="current-password">
           </div>
           
           <button class="btn-game btn-game-red btn-login-submit" id="btn-teacher-pin-login">
@@ -5746,7 +5779,7 @@ select { -webkit-font-smoothing: antialiased; }
                 <th>Nama Siswa</th>
                 <th>Kelas</th>
                 <th style="text-align:center">Absen</th>
-                <th style="text-align:center">Password</th>
+                <th style="text-align:center">Akun</th>
                 <th style="text-align:center">XP Total</th>
                 <th style="text-align:center">Aksi</th>
               </tr>
@@ -5900,8 +5933,8 @@ select { -webkit-font-smoothing: antialiased; }
         <input type="number" id="modal-student-number" placeholder="1">
       </div>
       <div class="form-group">
-        <label>Password Akun</label>
-        <input type="text" id="modal-student-pin" placeholder="Masukkan password">
+        <label>Password Akun Siswa (minimal 6 karakter)</label>
+        <input type="password" id="modal-student-pin" placeholder="Buat password minimal 6 karakter" autocomplete="new-password">
       </div>
       
       <div class="modal-footer">
@@ -5984,20 +6017,21 @@ const HABITS = [
 
 const MAX_PTS = HABITS.reduce((a,h)=>a+h.maxPts,0); // 40
 const LS_KEY = 'jurnal7kb';
+const TEACHER_AUTH_UID = 'YOmcS0HkFuVrZypsEPuxE1PPHNy2';
+const STUDENT_AUTH_DOMAIN = 'students.7kebiasaan.id';
 let teacherProfile = {
-  teacherPin: localStorage.getItem('teacherPin') || '1234',
   teacherName: localStorage.getItem('teacherName') || 'Panel Guru Petualangan',
   teacherNip: localStorage.getItem('teacherNip') || '',
   schoolYear: localStorage.getItem('schoolYear') || '',
   cityName: localStorage.getItem('cityName') || ''
 };
-let TEACHER_PIN = teacherProfile.teacherPin;
 let TEACHER_NAME = teacherProfile.teacherName;
 let TEACHER_NIP = teacherProfile.teacherNip;
 let SCHOOL_YEAR = teacherProfile.schoolYear;
 let CITY_NAME = teacherProfile.cityName;
 
 let currentStudent = null;
+let currentUserRole = null;
 let entryData = {};
 let currentPopupHabit = null;
 let deleteTargetId = null;
@@ -6020,18 +6054,17 @@ let refreshViewsTimer = null;
 // Fetch all data from localStorage immediately (instant offline load)
 function loadLocalCache() {
   try {
+    localStorage.removeItem('teacherPin');
     const localData = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
-    cachedStudents = localData.students || [];
+    cachedStudents = (localData.students || []).map(({ pin, ...student }) => student);
     cachedJournals = localData.journals || {};
     const profile = localData.teacherProfile || {};
     teacherProfile = {
-      teacherPin: localStorage.getItem('teacherPin') || profile.teacherPin || '1234',
       teacherName: localStorage.getItem('teacherName') || profile.teacherName || 'Panel Guru Petualangan',
       teacherNip: localStorage.getItem('teacherNip') || profile.teacherNip || '',
       schoolYear: localStorage.getItem('schoolYear') || profile.schoolYear || '',
       cityName: localStorage.getItem('cityName') || profile.cityName || ''
     };
-    TEACHER_PIN = teacherProfile.teacherPin;
     TEACHER_NAME = teacherProfile.teacherName;
     TEACHER_NIP = teacherProfile.teacherNip;
     SCHOOL_YEAR = teacherProfile.schoolYear;
@@ -6046,7 +6079,7 @@ function loadLocalCache() {
 function saveLocalCache() {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify({
-      students: cachedStudents,
+      students: cachedStudents.map(({ pin, ...student }) => student),
       journals: cachedJournals,
       teacherProfile: teacherProfile
     }));
@@ -6063,12 +6096,25 @@ function normalizeStudentsPayload(students) {
       name: student.name,
       kelas: student.kelas,
       absen: student.absen,
-      pin: student.pin,
+      authUid: student.authUid,
+      authEmail: student.authEmail,
       createdAt: student.createdAt || new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
     return acc;
   }, {});
+}
+
+function studentAuthEmail(studentId) {
+  return `student-${studentId}@${STUDENT_AUTH_DOMAIN}`;
+}
+
+function normalizePublicRosterStudent(student) {
+  return {
+    name: student.name,
+    kelas: student.kelas,
+    absen: student.absen
+  };
 }
 
 function buildStudentsArrayFromSnapshot(snapshotValue) {
@@ -6078,7 +6124,8 @@ function buildStudentsArrayFromSnapshot(snapshotValue) {
   Object.keys(snapshotValue).forEach((id) => {
     const student = snapshotValue[id];
     if (student && typeof student === 'object') {
-      students.push({ id, ...student });
+      const { pin, ...safeStudent } = student;
+      students.push({ id, ...safeStudent });
     }
   });
 
@@ -6132,6 +6179,7 @@ async function getStudents() {
   if (!isDataLoaded) {
     loadLocalCache();
   }
+  if (currentUserRole === 'student' && currentStudent) return [currentStudent];
   return cachedStudents;
 }
 
@@ -6147,14 +6195,13 @@ async function saveStudents(students) {
   }
   
   try {
-    const { ref, update } = window.rtdbModules;
+    const { ref, set } = window.rtdbModules;
     const payload = normalizeStudentsPayload(students);
-    
-    console.log(`📤 Uploading ${students.length} students to Firebase...`);
-    
-    // Merge records individually; never replace the entire students collection.
-    await update(ref(window.rtdb, 'students'), payload);
-    console.log(`✅ ${students.length} student records successfully synced to Firebase`);
+    for (const [studentId, student] of Object.entries(payload)) {
+      await set(ref(window.rtdb, 'students/' + studentId), student);
+      await set(ref(window.rtdb, 'publicRoster/' + studentId), normalizePublicRosterStudent(student));
+    }
+    console.log(`✅ ${Object.keys(payload).length} student records successfully synced to Firebase`);
     
     // Trigger UI refresh
     refreshActiveViews();
@@ -6166,13 +6213,57 @@ async function saveStudents(students) {
   }
 }
 
-async function saveStudentRecord(student) {
-  cachedStudents = [
-    ...cachedStudents.filter(existing => existing.id !== student.id),
-    student
-  ];
-  recapFiltersReady = false;
-  saveLocalCache();
+async function saveStudentRecord(student, password = '') {
+  const isNewStudent = !student.authUid;
+  if (!window.firebaseAuth || !window.firebaseAuthModules || !window.firebaseProvisioningAuth) {
+    toast('Firebase Authentication belum siap. Muat ulang lalu coba lagi.', 'error');
+    return false;
+  }
+  if (!window.firebaseAuth.currentUser || window.firebaseAuth.currentUser.uid !== TEACHER_AUTH_UID) {
+    toast('Sesi guru Firebase tidak aktif. Silakan masuk ulang.', 'error');
+    return false;
+  }
+  if (!window.rtdb || !window.rtdbModules) {
+    toast('Database belum tersambung. Periksa koneksi sebelum menyimpan siswa.', 'error');
+    return false;
+  }
+
+  let provisionedAuthUid = student.authUid;
+  let provisionedAuthUser = null;
+  if (isNewStudent) {
+    if (password.length < 6) {
+      toast('Password siswa harus minimal 6 karakter.', 'error');
+      return false;
+    }
+    student.authEmail = studentAuthEmail(student.id);
+    try {
+      const { createUserWithEmailAndPassword, signOut } = window.firebaseAuthModules;
+      let credential;
+      try {
+        credential = await createUserWithEmailAndPassword(
+          window.firebaseProvisioningAuth,
+          student.authEmail,
+          password
+        );
+      } catch (createError) {
+        if (createError.code !== 'auth/email-already-in-use') throw createError;
+        credential = await window.firebaseAuthModules.signInWithEmailAndPassword(
+          window.firebaseProvisioningAuth,
+          student.authEmail,
+          password
+        );
+      }
+      provisionedAuthUid = credential.user.uid;
+      provisionedAuthUser = credential.user;
+      student.authUid = provisionedAuthUid;
+    } catch (error) {
+      console.error('Student Firebase account creation failed:', error);
+      toast(error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential'
+        ? 'Akun login siswa sudah ada dengan password berbeda. Reset akun tersebut di Firebase Authentication.'
+        : 'Gagal membuat akun Firebase siswa. Periksa koneksi dan konfigurasi Authentication.', 'error');
+      return false;
+    }
+  }
 
   if (!window.rtdb || !window.rtdbModules) {
     console.warn('⚠️ Firebase tidak tersedia, siswa hanya tersimpan lokal');
@@ -6184,10 +6275,37 @@ async function saveStudentRecord(student) {
     const { ref, set } = window.rtdbModules;
     const payload = normalizeStudentsPayload([student])[student.id];
     await set(ref(window.rtdb, 'students/' + student.id), payload);
+    await set(ref(window.rtdb, 'publicRoster/' + student.id), normalizePublicRosterStudent(student));
+    if (provisionedAuthUid) {
+      await set(ref(window.rtdb, 'auth/studentByUid/' + provisionedAuthUid), student.id);
+    }
+    if (provisionedAuthUser) {
+      await window.firebaseAuthModules.signOut(window.firebaseProvisioningAuth);
+    }
+    cachedStudents = [
+      ...cachedStudents.filter(existing => existing.id !== student.id),
+      student
+    ];
+    recapFiltersReady = false;
+    saveLocalCache();
     refreshActiveViews();
     return true;
   } catch (e) {
     console.error('❌ Error saving student record to Firebase:', e);
+    if (provisionedAuthUser) {
+      try {
+        const { ref, remove } = window.rtdbModules;
+        await remove(ref(window.rtdb, 'auth/studentByUid/' + provisionedAuthUid));
+        await remove(ref(window.rtdb, 'publicRoster/' + student.id));
+        await remove(ref(window.rtdb, 'students/' + student.id));
+        await window.firebaseAuthModules.deleteUser(provisionedAuthUser);
+        await window.firebaseAuthModules.signOut(window.firebaseProvisioningAuth);
+      } catch (cleanupError) {
+        console.error('Failed to roll back newly created Firebase student account:', cleanupError);
+        toast('Akun siswa dibuat tetapi penyimpanan data gagal. Periksa Authentication → Users sebelum mencoba lagi.', 'error');
+        return false;
+      }
+    }
     toast('❌ Data siswa tersimpan lokal tetapi gagal ke cloud', 'error');
     return false;
   }
@@ -6202,7 +6320,6 @@ async function saveTeacherProfileToFirebase() {
   try {
     const { ref, set } = window.rtdbModules;
     const payload = {
-      teacherPin: TEACHER_PIN,
       teacherName: TEACHER_NAME,
       teacherNip: TEACHER_NIP,
       schoolYear: SCHOOL_YEAR,
@@ -6220,6 +6337,7 @@ async function saveTeacherProfileToFirebase() {
 }
 
 async function deleteStudent(studentId) {
+  const student = cachedStudents.find(item => item.id === studentId);
   cachedStudents = cachedStudents.filter(s => s.id !== studentId);
   saveLocalCache();
   
@@ -6233,6 +6351,10 @@ async function deleteStudent(studentId) {
     
     // Hapus siswa dari database
     await remove(ref(window.rtdb, 'students/' + studentId));
+    await remove(ref(window.rtdb, 'publicRoster/' + studentId));
+    if (student && student.authUid) {
+      await remove(ref(window.rtdb, 'auth/studentByUid/' + student.authUid));
+    }
     console.log('✅ Student successfully deleted from Firebase');
     
     // Hapus semua jurnal siswa dari database
@@ -6258,6 +6380,18 @@ function extractHabitData(entryData) {
 async function getJournals() {
   if (!isDataLoaded) {
     loadLocalCache();
+  }
+  if (currentUserRole === 'student' && currentStudent && window.rtdb && window.rtdbModules) {
+    const { ref, get, query, equalTo, orderByChild } = window.rtdbModules;
+    const snapshot = await get(query(
+      ref(window.rtdb, 'journals'),
+      orderByChild('studentId'),
+      equalTo(currentStudent.id)
+    ));
+    const journals = snapshot.val() || {};
+    Object.keys(journals).forEach(key => { cachedJournals[key] = journals[key]; });
+    saveLocalCache();
+    return journals;
   }
   return cachedJournals;
 }
@@ -6575,7 +6709,22 @@ async function populateSelect() {
   if (!sel) return;
   sel.innerHTML = '<option value="">-- Pilih Siswa --</option>';
   
-  const students = await getStudents();
+  let students = [];
+  try {
+    await ensureFirebaseSession();
+    if (window.rtdb && window.rtdbModules) {
+      const { ref, get } = window.rtdbModules;
+      const snapshot = await get(ref(window.rtdb, 'publicRoster'));
+      students = buildStudentsArrayFromSnapshot(snapshot.val());
+    } else {
+      toast('Belum terhubung ke database siswa. Coba muat ulang halaman.', 'error');
+      return;
+    }
+  } catch (error) {
+    console.error('Failed to load public student roster:', error);
+    toast('Gagal memuat daftar siswa. Periksa koneksi.', 'error');
+    return;
+  }
   students.sort((a,b)=>{
     const kelasA = (a.kelas || '').toString();
     const kelasB = (b.kelas || '').toString();
@@ -6590,6 +6739,30 @@ async function populateSelect() {
   });
 }
 
+async function ensureFirebaseSession() {
+  if (!window.firebaseAuth || !window.firebaseAuthModules) {
+    throw new Error('Firebase Authentication belum siap');
+  }
+  const { onAuthStateChanged, signInAnonymously } = window.firebaseAuthModules;
+  const user = await new Promise((resolve, reject) => {
+    let unsubscribe = () => {};
+    unsubscribe = onAuthStateChanged(
+      window.firebaseAuth,
+      authenticatedUser => {
+        unsubscribe();
+        resolve(authenticatedUser);
+      },
+      error => {
+        unsubscribe();
+        reject(error);
+      }
+    );
+  });
+  if (!user) {
+    await signInAnonymously(window.firebaseAuth);
+  }
+}
+
 // ============================================================
 // STUDENT LOGIN
 // ============================================================
@@ -6598,17 +6771,45 @@ async function doStudentLogin() {
   const pin = document.getElementById('login-pin').value.trim();
   if (!sel.value) { toast('Pilih nama siswa terlebih dahulu','error'); return; }
   if (!pin) { toast('Masukkan password','error'); return; }
-  
+  if (pin.length < 6) { toast('Password siswa minimal 6 karakter','error'); return; }
+  if (!window.firebaseAuth || !window.firebaseAuthModules || !window.rtdb) {
+    toast('Layanan login belum siap. Muat ulang halaman.', 'error');
+    return;
+  }
+
   showLoading('Memverifikasi...');
-  const students = await getStudents();
-  const s = students.find(x=>x.id===sel.value);
-  if (!s) { toast('Siswa tidak ditemukan','error'); hideLoading(); return; }
-  if (String(s.pin) !== pin) { toast('Password salah, coba lagi','error'); hideLoading(); return; }
-  
-  currentStudent = s;
-  try { localStorage.setItem('currentStudentSession', JSON.stringify(s)); } catch(e) {}
-  await openJournalPage();
-  hideLoading();
+  try {
+    const { signInWithEmailAndPassword } = window.firebaseAuthModules;
+    const credential = await signInWithEmailAndPassword(
+      window.firebaseAuth,
+      studentAuthEmail(sel.value),
+      pin
+    );
+    const { ref, get } = window.rtdbModules;
+    const mappingSnapshot = await get(ref(window.rtdb, 'auth/studentByUid/' + credential.user.uid));
+    if (!mappingSnapshot.exists() || mappingSnapshot.val() !== sel.value) {
+      await window.firebaseAuthModules.signOut(window.firebaseAuth);
+      await ensureFirebaseSession();
+      toast('Akun ini belum dipasangkan ke siswa yang dipilih. Hubungi guru.', 'error');
+      return;
+    }
+    const studentSnapshot = await get(ref(window.rtdb, 'students/' + sel.value));
+    if (!studentSnapshot.exists()) {
+      await window.firebaseAuthModules.signOut(window.firebaseAuth);
+      await ensureFirebaseSession();
+      toast('Data siswa tidak ditemukan. Hubungi guru.', 'error');
+      return;
+    }
+    currentStudent = { id: sel.value, ...studentSnapshot.val() };
+    currentUserRole = 'student';
+    try { localStorage.setItem('currentStudentSession', JSON.stringify({ id: currentStudent.id })); } catch(e) {}
+    await openJournalPage();
+  } catch (error) {
+    console.error('Student Firebase Authentication failed:', error);
+    toast('Password salah atau akun siswa belum dibuat di Firebase Authentication.', 'error');
+  } finally {
+    hideLoading();
+  }
 }
 
 function setupJournalRecapScroll() {
@@ -7139,15 +7340,47 @@ function showTeacherDashboard() {
   // detailed identity card removed — nothing to populate here
 }
 
-function doTeacherLogin() {
+async function doTeacherLogin() {
   const pinInput = document.getElementById('teacher-pin-input');
-  if (!pinInput) return;
+  const emailInput = document.getElementById('teacher-email-input');
+  if (!pinInput || !emailInput || !window.firebaseAuth || !window.firebaseAuthModules) {
+    toast('Firebase Authentication belum siap. Muat ulang halaman.', 'error');
+    return;
+  }
+  const email = emailInput.value.trim();
   const pin = pinInput.value.trim();
   
+  if (!email) { toast('Masukkan email akun guru','error'); return; }
   if (!pin) { toast('Masukkan password guru','error'); return; }
-  if (pin !== TEACHER_PIN) { toast('Password salah','error'); return; }
 
-  showTeacherDashboard();
+  showLoading('Memverifikasi akun guru...');
+  try {
+    const { signInWithEmailAndPassword, signOut } = window.firebaseAuthModules;
+    const credential = await signInWithEmailAndPassword(window.firebaseAuth, email, pin);
+    if (credential.user.uid !== TEACHER_AUTH_UID) {
+      await signOut(window.firebaseAuth);
+      await ensureFirebaseSession();
+      toast('Akun ini tidak memiliki hak akses guru.', 'error');
+      return;
+    }
+    currentUserRole = 'teacher';
+    const synced = await forceSyncFromFirebase();
+    if (!synced) {
+      await signOut(window.firebaseAuth);
+      await ensureFirebaseSession();
+      currentUserRole = null;
+      toast('Gagal memuat data guru. Periksa koneksi dan Rules Firebase.', 'error');
+      return;
+    }
+    await setupRealTimeListeners();
+    showTeacherDashboard();
+  } catch (error) {
+    console.error('Teacher Firebase Authentication failed:', error);
+    toast('Email atau password guru salah.', 'error');
+    return;
+  } finally {
+    hideLoading();
+  }
   const topbarTitle = document.querySelector('.teacher-topbar-title');
   if (topbarTitle) topbarTitle.textContent = 'DASBOARD GURU';
 
@@ -7173,6 +7406,19 @@ async function doTeacherLogout() {
   const pinInput = document.getElementById('teacher-pin-input');
 
   if (pinInput) pinInput.value = '';
+  const emailInput = document.getElementById('teacher-email-input');
+  if (emailInput) emailInput.value = '';
+  stopRealTimeListeners();
+  if (window.firebaseAuth && window.firebaseAuthModules) {
+    try {
+      await window.firebaseAuthModules.signOut(window.firebaseAuth);
+      await ensureFirebaseSession();
+    } catch (error) {
+      console.error('Teacher Firebase sign-out failed:', error);
+      toast('Gagal mengakhiri sesi guru di Firebase.', 'error');
+    }
+  }
+  currentUserRole = null;
   activeTeacherTab = null;
   showPage('page-login');
   populateSelect();
@@ -7224,24 +7470,27 @@ async function changeTeacherPassword() {
   
   if (!oldPw) { toast('Masukkan password lama', 'error'); return; }
   if (!newPw) { toast('Masukkan password baru', 'error'); return; }
-  if (newPw.length < 4) { toast('Password baru minimal 4 karakter', 'error'); return; }
+  if (newPw.length < 6) { toast('Password baru minimal 6 karakter', 'error'); return; }
   if (newPw !== confirmPw) { toast('Konfirmasi password tidak cocok', 'error'); return; }
-  if (oldPw !== TEACHER_PIN) { toast('Password lama salah', 'error'); return; }
   if (oldPw === newPw) { toast('Password baru harus berbeda dari password lama', 'error'); return; }
+  const user = window.firebaseAuth && window.firebaseAuth.currentUser;
+  if (!user || user.uid !== TEACHER_AUTH_UID || !user.email) {
+    toast('Sesi akun guru tidak aktif. Masuk ulang untuk mengubah password.', 'error');
+    return;
+  }
   
   showLoading('Mengubah password...');
   try {
-    TEACHER_PIN = newPw;
-    teacherProfile.teacherPin = newPw;
-    localStorage.setItem('teacherPin', newPw);
-    saveLocalCache();
-    await saveTeacherProfileToFirebase();
+    const { EmailAuthProvider, reauthenticateWithCredential, updatePassword } = window.firebaseAuthModules;
+    const credential = EmailAuthProvider.credential(user.email, oldPw);
+    await reauthenticateWithCredential(user, credential);
+    await updatePassword(user, newPw);
     
     document.getElementById('teacher-old-password').value = '';
     document.getElementById('teacher-new-password').value = '';
     document.getElementById('teacher-confirm-password').value = '';
     
-    toast('\uD83D\uDD12 Password guru berhasil diubah!', 'success');
+    toast('\uD83D\uDD12 Password akun guru berhasil diubah!', 'success');
   } catch(e) {
     console.error('Error changing password:', e);
     toast('Gagal mengubah password', 'error');
@@ -7270,7 +7519,7 @@ function importBackup(e) {
   reader.onload = async function(ev) {
     try {
       const data = JSON.parse(ev.target.result);
-      if (data.students && data.journals) {
+      if (data.students && data.journals && data.students.every(student => student.authUid && student.authEmail)) {
         cachedStudents = data.students;
         cachedJournals = data.journals;
         saveLocalCache();
@@ -7279,6 +7528,8 @@ function importBackup(e) {
           toast('Data berhasil di-import!', 'success');
           setTimeout(() => location.reload(), 1500);
         }
+      } else if (data.students && data.journals) {
+        toast('Backup ini belum berisi akun Firebase siswa. Impor dibatalkan agar login tidak rusak.', 'error');
       } else {
         toast('Format file tidak valid!', 'error');
       }
@@ -7460,7 +7711,7 @@ async function renderStudents(q) {
       <td class="student-name-cell">${s.name}</td>
       <td class="student-class-cell">${s.kelas}</td>
       <td style="text-align:center">${s.absen}</td>
-      <td style="letter-spacing:1px;font-family:monospace;text-align:center;font-weight:700;color:#3b82f6">${s.pin}</td>
+      <td style="text-align:center;color:#10b981;font-weight:700">${s.authUid ? 'Aktif' : 'Belum dibuat'}</td>
       <td style="text-align:center"><strong style="color:#fbbf24">${total} XP</strong></td>
       <td class="student-actions-cell">
         <button class="btn-icon btn-edit" title="Edit" data-id="${s.id}"><i data-lucide="pencil" style="width:14px;height:14px"></i></button>
@@ -7488,6 +7739,8 @@ function openAddModal() {
   document.getElementById('modal-student-class').value = '';
   document.getElementById('modal-student-number').value = '';
   document.getElementById('modal-student-pin').value = '';
+  document.getElementById('modal-student-pin').required = true;
+  document.getElementById('modal-student-pin').placeholder = 'Buat password minimal 6 karakter';
   document.getElementById('modal-student').classList.add('active');
 }
 
@@ -7500,7 +7753,10 @@ async function openEditModal(id) {
   document.getElementById('modal-student-name').value = s.name;
   document.getElementById('modal-student-class').value = s.kelas;
   document.getElementById('modal-student-number').value = s.absen;
-  document.getElementById('modal-student-pin').value = s.pin;
+  const passwordInput = document.getElementById('modal-student-pin');
+  passwordInput.value = '';
+  passwordInput.required = false;
+  passwordInput.placeholder = 'Kosongkan; reset password di Firebase bila perlu';
   document.getElementById('modal-student').classList.add('active');
 }
 
@@ -7513,12 +7769,15 @@ async function saveStudentModal() {
   const name = document.getElementById('modal-student-name').value.trim();
   const kelas = document.getElementById('modal-student-class').value.trim();
   const absen = parseInt(document.getElementById('modal-student-number').value)||0;
-  const pin = document.getElementById('modal-student-pin').value.trim();
+  const password = document.getElementById('modal-student-pin').value;
   
   if (!name) { toast('Nama tidak boleh kosong','error'); return; }
   if (!kelas) { toast('Kelas tidak boleh kosong','error'); return; }
   if (!absen) { toast('No. absen tidak valid','error'); return; }
-  if (!pin) { toast('Password tidak boleh kosong','error'); return; }
+  if ((!id || !cachedStudents.find(student => student.id === id)?.authUid) && password.length < 6) {
+    toast('Password akun siswa minimal 6 karakter','error');
+    return;
+  }
   
   showLoading('Menyimpan data siswa...');
   try {
@@ -7532,7 +7791,6 @@ async function saveStudentModal() {
           name,
           kelas,
           absen,
-          pin,
           updatedAt: new Date().toISOString()
         };
       }
@@ -7548,19 +7806,18 @@ async function saveStudentModal() {
         name,
         kelas,
         absen,
-        pin,
         createdAt: now,
         updatedAt: now
       };
     }
     
-    const synced = await saveStudentRecord(savedStudent);
+    const synced = await saveStudentRecord(savedStudent, id ? '' : password);
     if (synced) {
-      toast(id ? 'Data pahlawan berhasil diubah' : 'Pahlawan baru berhasil ditambahkan', 'success');
+      toast(id ? 'Data pahlawan berhasil diubah' : 'Akun dan data siswa berhasil dibuat', 'success');
+      closeStudentModal();
+      renderStudents(document.getElementById('student-search').value);
+      populateSelect();
     }
-    closeStudentModal();
-    renderStudents(document.getElementById('student-search').value);
-    populateSelect();
   } catch(e) {
     console.error('Error saving student:', e);
     toast('Gagal menyimpan data siswa', 'error');
@@ -8142,7 +8399,7 @@ function updateSyncStatus(status = 'SYNCED', color = '#10b981') {
 
 // Setup Firebase real-time listeners
 async function setupRealTimeListeners() {
-  if (!window.rtdb || !window.rtdbModules) {
+  if (currentUserRole !== 'teacher' || !window.rtdb || !window.rtdbModules) {
     console.warn('⚠️ Firebase RTDB tidak tersedia');
     updateSyncStatus('OFFLINE', '#ef4444');
     return false;
@@ -8223,10 +8480,17 @@ async function setupRealTimeListeners() {
   }
 }
 
+function stopRealTimeListeners() {
+  if (unsubStudents) unsubStudents();
+  if (unsubJournals) unsubJournals();
+  unsubStudents = null;
+  unsubJournals = null;
+}
+
 // Force sync data dari Firebase
 async function forceSyncFromFirebase() {
-  if (!window.rtdb || !window.rtdbModules) {
-    console.warn('⚠️ Firebase tidak tersedia, skip sync');
+  if (currentUserRole !== 'teacher' || !window.rtdb || !window.rtdbModules) {
+    console.warn('⚠️ Sesi guru/Firebase tidak tersedia, skip sync');
     updateSyncStatus('OFFLINE', '#ef4444');
     return false;
   }
@@ -8282,14 +8546,16 @@ async function forceSyncFromFirebase() {
       
       if (data && data.settings && data.settings.teacherProfile) {
         const profile = data.settings.teacherProfile;
+        if (Object.prototype.hasOwnProperty.call(profile, 'teacherPin')) {
+          const { ref, remove } = window.rtdbModules;
+          await remove(ref(window.rtdb, 'settings/teacherProfile/teacherPin'));
+        }
         teacherProfile = {
-          teacherPin: profile.teacherPin || teacherProfile.teacherPin,
           teacherName: profile.teacherName || teacherProfile.teacherName,
           teacherNip: profile.teacherNip || teacherProfile.teacherNip,
           schoolYear: profile.schoolYear || teacherProfile.schoolYear,
           cityName: profile.cityName || teacherProfile.cityName
         };
-        TEACHER_PIN = teacherProfile.teacherPin;
         TEACHER_NAME = teacherProfile.teacherName;
         TEACHER_NIP = teacherProfile.teacherNip;
         SCHOOL_YEAR = teacherProfile.schoolYear;
@@ -8302,8 +8568,13 @@ async function forceSyncFromFirebase() {
       updateSyncStatus('SYNCED', '#10b981');
       return true;
     } else {
-      console.log('ℹ️ Tidak ada data di Firebase');
-      return false;
+      console.log('ℹ️ Database Firebase kosong; guru dapat mulai mengisi data.');
+      cachedStudents = [];
+      cachedJournals = {};
+      saveLocalCache();
+      refreshActiveViews();
+      updateSyncStatus('SYNCED', '#10b981');
+      return true;
     }
   } catch(e) {
     console.error('❌ Error force syncing:', e);
@@ -8329,47 +8600,23 @@ async function init() {
   try {
     setLoadProgress(15, 'Membuka gerbang data lokal...');
     loadLocalCache();
+    setupEventListeners();
     
     setLoadProgress(35, 'Menghubungkan ke Portal cloud...');
     
     // Wait for Firebase to be ready
-    let rtdbReady = false;
     let attempts = 0;
     console.log('⏳ Waiting untuk Firebase initialization...');
-    while (!window.rtdb && attempts < 50) {
+    while ((!window.rtdb || !window.firebaseAuth) && attempts < 50) {
       await new Promise(r => setTimeout(r, 100));
       attempts++;
     }
-    
-    if (window.rtdb) {
-      console.log('✅ Firebase ready!');
-      setLoadProgress(50, 'Sinkronisasi data dari cloud...');
-      
-      // Force sync data dari Firebase terlebih dahulu
-      rtdbReady = await Promise.race([
-        forceSyncFromFirebase(),
-        new Promise(resolve => setTimeout(() => {
-          console.warn('⚠️ Firebase timeout, melanjutkan dengan cache lokal');
-          updateSyncStatus('OFFLINE', '#ef4444');
-          resolve(false);
-        }, 5000))
-      ]);
-      console.log(`Firebase sync result: ${rtdbReady}`);
-    } else {
-      console.warn('⚠️ Firebase tidak siap (offline mode)');
-      rtdbReady = false;
+    if (!window.rtdb || !window.firebaseAuth) {
+      throw new Error('Firebase SDK gagal dimuat');
     }
-    
-    if (rtdbReady) {
-      setLoadProgress(75, 'Memasang real-time listeners...');
-      
-      // Setup real-time listeners untuk update otomatis
-      await setupRealTimeListeners();
-    }
-    
-    setLoadProgress(70, rtdbReady ? 'Sinkronisasi Cloud Berhasil!' : 'Portal offline, menggunakan cache lokal');
-    
-    setupEventListeners();
+    await ensureFirebaseSession();
+
+    setLoadProgress(55, 'Memuat daftar siswa...');
     
     // Add date checker for day rollover
     let lastCheckedDay = todayStr();
@@ -8397,7 +8644,7 @@ async function init() {
     
     // Setup auto-sync interval - re-sync setiap 30 detik untuk memastikan data tetap sinkron
     setInterval(async () => {
-      if (window.rtdb && document.hidden === false) {
+      if (currentUserRole === 'teacher' && window.rtdb && document.hidden === false) {
         console.log('🔄 Auto-sync berkala...');
         await forceSyncFromFirebase();
       }
@@ -8409,18 +8656,33 @@ async function init() {
     // Auto redirect - cek session siswa yang tersimpan
     setTimeout(async () => {
       try {
-        const savedSession = localStorage.getItem('currentStudentSession');
-        if (savedSession) {
-          const sessionStudent = JSON.parse(savedSession);
-          // Verifikasi siswa masih ada di database
-          const students = await getStudents();
-          const found = students.find(s => s.id === sessionStudent.id);
-          if (found) {
-            currentStudent = found;
-            await openJournalPage();
-            console.log('🔄 Session restored untuk ' + found.name);
+        const user = window.firebaseAuth.currentUser;
+        if (user && user.uid === TEACHER_AUTH_UID) {
+          currentUserRole = 'teacher';
+          if (await forceSyncFromFirebase()) {
+            await setupRealTimeListeners();
+            showTeacherDashboard();
             return;
           }
+          await window.firebaseAuthModules.signOut(window.firebaseAuth);
+        } else if (user) {
+            if (user.isAnonymous) {
+              showPage('page-login');
+              return;
+            }
+            const { ref, get } = window.rtdbModules;
+          const mappingSnapshot = await get(ref(window.rtdb, 'auth/studentByUid/' + user.uid));
+          if (mappingSnapshot.exists()) {
+            const studentId = mappingSnapshot.val();
+            const studentSnapshot = await get(ref(window.rtdb, 'students/' + studentId));
+            if (studentSnapshot.exists()) {
+              currentUserRole = 'student';
+              currentStudent = { id: studentId, ...studentSnapshot.val() };
+              await openJournalPage();
+              return;
+            }
+          }
+          await window.firebaseAuthModules.signOut(window.firebaseAuth);
         }
       } catch(e) {
         console.warn('⚠️ Gagal restore session:', e);
@@ -8467,6 +8729,8 @@ function setupEventListeners() {
       showPage('page-teacher');
       const teacherPinInput = document.getElementById('teacher-pin-input');
       if (teacherPinInput) teacherPinInput.value = '';
+      const teacherEmailInput = document.getElementById('teacher-email-input');
+      if (teacherEmailInput) teacherEmailInput.value = '';
       document.getElementById('teacher-gate').classList.remove('hidden');
       document.getElementById('teacher-panel').classList.add('hidden');
     });
@@ -8478,10 +8742,20 @@ function setupEventListeners() {
   const btnSaveJournal = document.getElementById('btn-save-journal');
   
   if (btnJournalLogout) {
-    btnJournalLogout.addEventListener('click', ()=>{
+    btnJournalLogout.addEventListener('click', async ()=>{
       currentStudent = null;
+      currentUserRole = null;
       entryData = {};
       try { localStorage.removeItem('currentStudentSession'); } catch(e) {}
+      if (window.firebaseAuth && window.firebaseAuthModules) {
+        try {
+          await window.firebaseAuthModules.signOut(window.firebaseAuth);
+          await ensureFirebaseSession();
+        } catch (error) {
+          console.error('Student Firebase sign-out failed:', error);
+          toast('Gagal mengakhiri sesi siswa di Firebase.', 'error');
+        }
+      }
       showPage('page-login');
       populateSelect();
       const loginPinField = document.getElementById('login-pin');
@@ -8514,6 +8788,7 @@ function setupEventListeners() {
   // Teacher gate
   const btnTeacherPinLogin = document.getElementById('btn-teacher-pin-login');
   const teacherPinInput = document.getElementById('teacher-pin-input');
+  const teacherEmailInput = document.getElementById('teacher-email-input');
   const btnBackToStudent = document.getElementById('btn-back-to-student');
   
   if (btnTeacherPinLogin) btnTeacherPinLogin.addEventListener('click', doTeacherLogin);
@@ -8522,10 +8797,27 @@ function setupEventListeners() {
       if (e.key==='Enter') doTeacherLogin();
     });
   }
+  if (teacherEmailInput) {
+    teacherEmailInput.addEventListener('keypress', (e)=>{
+      if (e.key==='Enter') doTeacherLogin();
+    });
+  }
   if (btnBackToStudent) {
-    btnBackToStudent.addEventListener('click', ()=>{
+    btnBackToStudent.addEventListener('click', async ()=>{
+      if (window.firebaseAuth && window.firebaseAuth.currentUser) {
+        try {
+          await window.firebaseAuthModules.signOut(window.firebaseAuth);
+          await ensureFirebaseSession();
+        } catch (error) {
+          console.error('Firebase sign-out before returning to student login failed:', error);
+          toast('Gagal mengakhiri sesi Firebase.', 'error');
+          return;
+        }
+      }
+      currentUserRole = null;
       showPage('page-login');
       if (teacherPinInput) teacherPinInput.value = '';
+      if (teacherEmailInput) teacherEmailInput.value = '';
     });
   }
 
