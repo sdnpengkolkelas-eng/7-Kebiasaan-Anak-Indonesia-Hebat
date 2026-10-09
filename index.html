@@ -7146,7 +7146,7 @@ function doTeacherLogin() {
   
   if (!pin) { toast('Masukkan password guru','error'); return; }
   if (pin !== TEACHER_PIN) { toast('Password salah','error'); return; }
-  
+
   showTeacherDashboard();
   const topbarTitle = document.querySelector('.teacher-topbar-title');
   if (topbarTitle) topbarTitle.textContent = 'DASBOARD GURU';
@@ -7167,7 +7167,7 @@ function doTeacherLogin() {
   switchTeacherTab('overview');
 }
 
-function doTeacherLogout() {
+async function doTeacherLogout() {
   const gate = document.getElementById('teacher-gate');
   const panel = document.getElementById('teacher-panel');
   const pinInput = document.getElementById('teacher-pin-input');
