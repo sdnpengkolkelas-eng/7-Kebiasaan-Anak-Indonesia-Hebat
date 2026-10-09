@@ -6214,7 +6214,6 @@ async function saveStudents(students) {
 }
 
 async function saveStudentRecord(student, password = '') {
-  const isNewStudent = !student.authUid;
   if (!window.firebaseAuth || !window.firebaseAuthModules || !window.firebaseProvisioningAuth) {
     toast('Firebase Authentication belum siap. Muat ulang lalu coba lagi.', 'error');
     return false;
@@ -6228,60 +6227,74 @@ async function saveStudentRecord(student, password = '') {
     return false;
   }
 
-  let provisionedAuthUid = student.authUid;
+  if (password.length < 6) {
+    toast('Masukkan password akun siswa minimal 6 karakter untuk memasangkan akunnya.', 'error');
+    return false;
+  }
+
+  const accountEmail = studentAuthEmail(student.id);
+  let provisionedAuthUid = '';
   let provisionedAuthUser = null;
-  if (isNewStudent) {
-    if (password.length < 6) {
-      toast('Password siswa harus minimal 6 karakter.', 'error');
-      return false;
-    }
-    student.authEmail = studentAuthEmail(student.id);
+  let provisionedAccountWasCreated = false;
+  student.authEmail = accountEmail;
+  try {
+    const { createUserWithEmailAndPassword, signInWithEmailAndPassword } = window.firebaseAuthModules;
+    let credential;
     try {
-      const { createUserWithEmailAndPassword, signOut } = window.firebaseAuthModules;
-      let credential;
+      credential = await signInWithEmailAndPassword(
+        window.firebaseProvisioningAuth,
+        accountEmail,
+        password
+      );
+    } catch (signInError) {
+      if (!['auth/user-not-found', 'auth/invalid-credential'].includes(signInError.code)) {
+        throw signInError;
+      }
+      if (student.authUid) {
+        throw new Error('STUDENT_ACCOUNT_RESET_REQUIRED');
+      }
       try {
         credential = await createUserWithEmailAndPassword(
           window.firebaseProvisioningAuth,
-          student.authEmail,
+          accountEmail,
           password
         );
       } catch (createError) {
-        if (createError.code !== 'auth/email-already-in-use') throw createError;
-        credential = await window.firebaseAuthModules.signInWithEmailAndPassword(
-          window.firebaseProvisioningAuth,
-          student.authEmail,
-          password
-        );
+        if (createError.code === 'auth/email-already-in-use') {
+          throw new Error('STUDENT_PASSWORD_DOES_NOT_MATCH');
+        }
+        throw createError;
       }
-      provisionedAuthUid = credential.user.uid;
-      provisionedAuthUser = credential.user;
-      student.authUid = provisionedAuthUid;
-    } catch (error) {
-      console.error('Student Firebase account creation failed:', error);
-      toast(error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential'
-        ? 'Akun login siswa sudah ada dengan password berbeda. Reset akun tersebut di Firebase Authentication.'
-        : 'Gagal membuat akun Firebase siswa. Periksa koneksi dan konfigurasi Authentication.', 'error');
-      return false;
+      provisionedAccountWasCreated = true;
     }
-  }
-
-  if (!window.rtdb || !window.rtdbModules) {
-    console.warn('⚠️ Firebase tidak tersedia, siswa hanya tersimpan lokal');
-    toast('⚠️ Offline: Data siswa tersimpan lokal, belum di cloud', 'warning');
+    provisionedAuthUid = credential.user.uid;
+    provisionedAuthUser = credential.user;
+    student.authUid = provisionedAuthUid;
+  } catch (error) {
+    console.error('Student Firebase account verification failed:', error);
+    if (error.message === 'STUDENT_ACCOUNT_RESET_REQUIRED') {
+      toast('Akun Authentication siswa tidak ditemukan. Periksa akun siswa di Firebase Authentication.', 'error');
+    } else if (error.message === 'STUDENT_PASSWORD_DOES_NOT_MATCH') {
+      toast('Password tidak cocok dengan akun siswa Firebase. Reset password akun itu di Authentication, lalu coba lagi.', 'error');
+    } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+      toast('Password tidak cocok dengan akun siswa Firebase. Periksa/reset password di Authentication.', 'error');
+    } else {
+      toast('Gagal memverifikasi akun siswa di Firebase Authentication.', 'error');
+    }
     return false;
   }
 
   try {
-    const { ref, set } = window.rtdbModules;
+    const { ref, set, remove } = window.rtdbModules;
     const payload = normalizeStudentsPayload([student])[student.id];
     await set(ref(window.rtdb, 'students/' + student.id), payload);
     await set(ref(window.rtdb, 'publicRoster/' + student.id), normalizePublicRosterStudent(student));
-    if (provisionedAuthUid) {
-      await set(ref(window.rtdb, 'auth/studentByUid/' + provisionedAuthUid), student.id);
+    const oldAuthUid = cachedStudents.find(existing => existing.id === student.id)?.authUid;
+    if (oldAuthUid && oldAuthUid !== provisionedAuthUid) {
+      await remove(ref(window.rtdb, 'auth/studentByUid/' + oldAuthUid));
     }
-    if (provisionedAuthUser) {
-      await window.firebaseAuthModules.signOut(window.firebaseProvisioningAuth);
-    }
+    await set(ref(window.rtdb, 'auth/studentByUid/' + provisionedAuthUid), student.id);
+    await window.firebaseAuthModules.signOut(window.firebaseProvisioningAuth);
     cachedStudents = [
       ...cachedStudents.filter(existing => existing.id !== student.id),
       student
@@ -6292,19 +6305,23 @@ async function saveStudentRecord(student, password = '') {
     return true;
   } catch (e) {
     console.error('❌ Error saving student record to Firebase:', e);
-    if (provisionedAuthUser) {
+    if (provisionedAccountWasCreated && provisionedAuthUser) {
       try {
         const { ref, remove } = window.rtdbModules;
         await remove(ref(window.rtdb, 'auth/studentByUid/' + provisionedAuthUid));
         await remove(ref(window.rtdb, 'publicRoster/' + student.id));
         await remove(ref(window.rtdb, 'students/' + student.id));
         await window.firebaseAuthModules.deleteUser(provisionedAuthUser);
-        await window.firebaseAuthModules.signOut(window.firebaseProvisioningAuth);
       } catch (cleanupError) {
         console.error('Failed to roll back newly created Firebase student account:', cleanupError);
         toast('Akun siswa dibuat tetapi penyimpanan data gagal. Periksa Authentication → Users sebelum mencoba lagi.', 'error');
         return false;
       }
+    }
+    try {
+      await window.firebaseAuthModules.signOut(window.firebaseProvisioningAuth);
+    } catch (signOutError) {
+      console.error('Could not sign out student provisioning session:', signOutError);
     }
     toast('❌ Data siswa tersimpan lokal tetapi gagal ke cloud', 'error');
     return false;
@@ -6778,6 +6795,7 @@ async function doStudentLogin() {
   }
 
   showLoading('Memverifikasi...');
+  let firebaseSignInSucceeded = false;
   try {
     const { signInWithEmailAndPassword } = window.firebaseAuthModules;
     const credential = await signInWithEmailAndPassword(
@@ -6785,6 +6803,7 @@ async function doStudentLogin() {
       studentAuthEmail(sel.value),
       pin
     );
+    firebaseSignInSucceeded = true;
     const { ref, get } = window.rtdbModules;
     const mappingSnapshot = await get(ref(window.rtdb, 'auth/studentByUid/' + credential.user.uid));
     if (!mappingSnapshot.exists() || mappingSnapshot.val() !== sel.value) {
@@ -6806,7 +6825,21 @@ async function doStudentLogin() {
     await openJournalPage();
   } catch (error) {
     console.error('Student Firebase Authentication failed:', error);
-    toast('Password salah atau akun siswa belum dibuat di Firebase Authentication.', 'error');
+    if (firebaseSignInSucceeded) {
+      try {
+        await window.firebaseAuthModules.signOut(window.firebaseAuth);
+        await ensureFirebaseSession();
+      } catch (signOutError) {
+        console.error('Could not restore anonymous session after student login failure:', signOutError);
+      }
+      toast('Password diterima Firebase, tetapi izin data siswa belum cocok. Guru perlu memasangkan ulang akun siswa.', 'error');
+    } else if (error.code === 'auth/user-not-found') {
+      toast('Akun siswa belum dibuat di Firebase Authentication. Minta guru menyimpan ulang data siswa.', 'error');
+    } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+      toast('Password tidak cocok dengan akun siswa Firebase.', 'error');
+    } else {
+      toast('Login Firebase gagal (' + (error.code || 'error') + '). Periksa koneksi atau Authentication.', 'error');
+    }
   } finally {
     hideLoading();
   }
@@ -7755,8 +7788,8 @@ async function openEditModal(id) {
   document.getElementById('modal-student-number').value = s.absen;
   const passwordInput = document.getElementById('modal-student-pin');
   passwordInput.value = '';
-  passwordInput.required = false;
-  passwordInput.placeholder = 'Kosongkan; reset password di Firebase bila perlu';
+  passwordInput.required = true;
+  passwordInput.placeholder = 'Masukkan password akun siswa untuk memasangkan akun';
   document.getElementById('modal-student').classList.add('active');
 }
 
@@ -7774,8 +7807,8 @@ async function saveStudentModal() {
   if (!name) { toast('Nama tidak boleh kosong','error'); return; }
   if (!kelas) { toast('Kelas tidak boleh kosong','error'); return; }
   if (!absen) { toast('No. absen tidak valid','error'); return; }
-  if ((!id || !cachedStudents.find(student => student.id === id)?.authUid) && password.length < 6) {
-    toast('Password akun siswa minimal 6 karakter','error');
+  if (password.length < 6) {
+    toast('Password akun siswa minimal 6 karakter untuk verifikasi dan pemasangan akun','error');
     return;
   }
   
@@ -7811,7 +7844,7 @@ async function saveStudentModal() {
       };
     }
     
-    const synced = await saveStudentRecord(savedStudent, id ? '' : password);
+    const synced = await saveStudentRecord(savedStudent, password);
     if (synced) {
       toast(id ? 'Data pahlawan berhasil diubah' : 'Akun dan data siswa berhasil dibuat', 'success');
       closeStudentModal();
@@ -8678,6 +8711,7 @@ async function init() {
             if (studentSnapshot.exists()) {
               currentUserRole = 'student';
               currentStudent = { id: studentId, ...studentSnapshot.val() };
+              cachedStudents = [currentStudent];
               await openJournalPage();
               return;
             }
