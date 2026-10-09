@@ -329,10 +329,13 @@ body::after {
   inset: 0;
   background: linear-gradient(135deg, #dff3ff 0%, #d9efff 36%, #eaf7ff 100%);
   display: none;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   z-index: 10000;
-  padding: 24px;
+  padding: max(24px, env(safe-area-inset-top, 0px)) 24px max(24px, env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 #page-opening.active {
   display: flex !important;
@@ -2282,8 +2285,8 @@ body:has(#page-teacher.active)::after { display: none; }
 #page-login {
   justify-content: flex-start;
   overflow-y: auto;
-  padding-top: 24px;
-  padding-bottom: 24px;
+  padding-top: max(24px, env(safe-area-inset-top, 0px));
+  padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
 }
 #page-login .login-card { margin: auto 0; }
 
@@ -6144,14 +6147,14 @@ async function saveStudents(students) {
   }
   
   try {
-    const { ref, set } = window.rtdbModules;
+    const { ref, update } = window.rtdbModules;
     const payload = normalizeStudentsPayload(students);
     
     console.log(`📤 Uploading ${students.length} students to Firebase...`);
     
-    // Upload ke Firebase
-    await set(ref(window.rtdb, 'students'), payload);
-    console.log(`✅ ${students.length} Students successfully synced to Firebase`);
+    // Merge records individually; never replace the entire students collection.
+    await update(ref(window.rtdb, 'students'), payload);
+    console.log(`✅ ${students.length} student records successfully synced to Firebase`);
     
     // Trigger UI refresh
     refreshActiveViews();
@@ -6159,6 +6162,33 @@ async function saveStudents(students) {
   } catch(e) {
     console.error('❌ Error saving students to Firebase:', e);
     toast('❌ Data tersimpan lokal tapi gagal ke cloud - cek koneksi', 'error');
+    return false;
+  }
+}
+
+async function saveStudentRecord(student) {
+  cachedStudents = [
+    ...cachedStudents.filter(existing => existing.id !== student.id),
+    student
+  ];
+  recapFiltersReady = false;
+  saveLocalCache();
+
+  if (!window.rtdb || !window.rtdbModules) {
+    console.warn('⚠️ Firebase tidak tersedia, siswa hanya tersimpan lokal');
+    toast('⚠️ Offline: Data siswa tersimpan lokal, belum di cloud', 'warning');
+    return false;
+  }
+
+  try {
+    const { ref, set } = window.rtdbModules;
+    const payload = normalizeStudentsPayload([student])[student.id];
+    await set(ref(window.rtdb, 'students/' + student.id), payload);
+    refreshActiveViews();
+    return true;
+  } catch (e) {
+    console.error('❌ Error saving student record to Firebase:', e);
+    toast('❌ Data siswa tersimpan lokal tetapi gagal ke cloud', 'error');
     return false;
   }
 }
@@ -6350,22 +6380,6 @@ async function deleteStudentJournals(studentId) {
   } catch(e) {
     console.error('❌ Error deleting student journals:', e);
   }
-}
-
-// ============================================================
-// SEED DEMO DATA
-// ============================================================
-async function seedDemoIfEmpty() {
-  const students = await getStudents();
-  if (students.length > 0) return;
-  const demo = [
-    {id:'s1', name:'Andi Pratama',   kelas:'5A', absen:1, pin:'1111'},
-    {id:'s2', name:'Budi Santoso',   kelas:'5A', absen:2, pin:'2222'},
-    {id:'s3', name:'Citra Dewi',     kelas:'5B', absen:1, pin:'3333'},
-    {id:'s4', name:'Dina Rahayu',    kelas:'5B', absen:2, pin:'4444'},
-    {id:'s5', name:'Eko Purnomo',    kelas:'6A', absen:1, pin:'5555'}
-  ];
-  await saveStudents(demo);
 }
 
 // ============================================================
@@ -7260,9 +7274,11 @@ function importBackup(e) {
         cachedStudents = data.students;
         cachedJournals = data.journals;
         saveLocalCache();
-        await saveStudents(cachedStudents);
-        toast('Data berhasil di-import!', 'success');
-        setTimeout(() => location.reload(), 1500);
+        const synced = await saveStudents(cachedStudents);
+        if (synced) {
+          toast('Data berhasil di-import!', 'success');
+          setTimeout(() => location.reload(), 1500);
+        }
       } else {
         toast('Format file tidak valid!', 'error');
       }
@@ -7506,28 +7522,28 @@ async function saveStudentModal() {
   
   showLoading('Menyimpan data siswa...');
   try {
-    let students = [...cachedStudents];
+    let savedStudent;
     
     if (id) {
-      // Edit siswa yang sudah ada
-      students = students.map(s => {
-        if (s.id === id) {
-          return {
-            ...s,
-            name,
-            kelas,
-            absen,
-            pin,
-            updatedAt: new Date().toISOString()
-          };
-        }
-        return s;
-      });
-      toast('Data pahlawan berhasil diubah','success');
+      const existingStudent = cachedStudents.find(student => student.id === id);
+      if (existingStudent) {
+        savedStudent = {
+          ...existingStudent,
+          name,
+          kelas,
+          absen,
+          pin,
+          updatedAt: new Date().toISOString()
+        };
+      }
+      if (!savedStudent) {
+        toast('Siswa tidak ditemukan. Muat ulang daftar sebelum mengubah data.', 'error');
+        return;
+      }
     } else {
       // Tambah siswa baru
       const now = new Date().toISOString();
-      students.push({
+      savedStudent = {
         id: uid(),
         name,
         kelas,
@@ -7535,11 +7551,13 @@ async function saveStudentModal() {
         pin,
         createdAt: now,
         updatedAt: now
-      });
-      toast('Pahlawan baru berhasil ditambahkan','success');
+      };
     }
     
-    await saveStudents(students);
+    const synced = await saveStudentRecord(savedStudent);
+    if (synced) {
+      toast(id ? 'Data pahlawan berhasil diubah' : 'Pahlawan baru berhasil ditambahkan', 'success');
+    }
     closeStudentModal();
     renderStudents(document.getElementById('student-search').value);
     populateSelect();
@@ -8375,7 +8393,6 @@ async function init() {
       }
     }, 60000);
 
-    await seedDemoIfEmpty();
     await populateSelect();
     
     // Setup auto-sync interval - re-sync setiap 30 detik untuk memastikan data tetap sinkron
