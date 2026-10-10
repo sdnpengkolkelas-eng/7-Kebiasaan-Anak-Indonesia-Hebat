@@ -536,6 +536,14 @@ body::after {
   position: relative;
   z-index: 1;
 }
+.roster-load-status {
+  display: block;
+  min-height: 1.2em;
+  margin-top: 6px;
+  color: #ffe3a3;
+  font-size: .68rem;
+  line-height: 1.4;
+}
 .form-group label {
   display: block;
   font-family: var(--font-title);
@@ -5579,6 +5587,7 @@ select { -webkit-font-smoothing: antialiased; }
         <select id="login-student-select">
           <option value="">-- Pilih Siswa --</option>
         </select>
+        <small class="roster-load-status" id="roster-load-status" role="status" aria-live="polite"></small>
       </div>
       
       <div class="form-group">
@@ -6746,6 +6755,8 @@ async function populateSelect() {
   const sel = document.getElementById('login-student-select');
   if (!sel) return;
   sel.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+  const status = document.getElementById('roster-load-status');
+  if (status) status.textContent = 'Memuat daftar nama siswa...';
 
   let students = [];
   try {
@@ -6759,12 +6770,18 @@ async function populateSelect() {
       );
       students = buildStudentsArrayFromSnapshot(snapshot.val());
     } else {
-      toast('Belum terhubung ke database siswa. Coba muat ulang halaman.', 'error');
+      if (status) status.textContent = 'Database belum siap. Periksa koneksi internet lalu muat ulang.';
       return;
     }
   } catch (error) {
     console.error('Failed to load public student roster:', error);
-    toast('Gagal memuat daftar siswa. Periksa koneksi.', 'error');
+    if (status) {
+      const errorCode = String(error && error.code || '').toLowerCase();
+      const errorMessage = String(error && error.message || '').toLowerCase();
+      status.textContent = errorCode.includes('permission') || errorMessage.includes('permission denied')
+        ? 'Daftar siswa belum dapat diakses. Admin perlu menerapkan aturan akses Firebase.'
+        : 'Daftar siswa gagal dimuat. Periksa koneksi internet lalu muat ulang.';
+    }
     return;
   }
   students.sort((a,b)=>{
@@ -6779,6 +6796,7 @@ async function populateSelect() {
     o.textContent = s.name;
     sel.appendChild(o);
   });
+  if (status) status.textContent = students.length ? '' : 'Belum ada data siswa. Hubungi guru.';
 }
 
 async function ensureFirebaseSession() {
@@ -9029,7 +9047,7 @@ function setupEventListeners() {
 
 // Start as soon as the application markup and inline code are parsed.
 if (typeof showPage === 'function' && typeof init === 'function') {
-  showPage('page-opening');
+  showPage('page-login');
   init();
 }
 
