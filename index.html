@@ -8938,34 +8938,21 @@ function setupEventListeners() {
   // Student form modal
   const btnModalStudentCancel = document.getElementById('btn-modal-student-cancel');
   const btnModalStudentSave = document.getElementById('btn-modal-student-save');
-  const modalStudent = document.getElementById('modal-student');
   
   if (btnModalStudentCancel) btnModalStudentCancel.addEventListener('click', closeStudentModal);
   if (btnModalStudentSave) btnModalStudentSave.addEventListener('click', saveStudentModal);
-  if (modalStudent) {
-    modalStudent.addEventListener('click', (e)=>{
-      if (e.target.id==='modal-student') closeStudentModal();
-    });
-  }
 
   // Delete modal
   const btnConfirmCancel = document.getElementById('btn-confirm-cancel');
   const btnConfirmDelete = document.getElementById('btn-confirm-delete');
-  const modalConfirm = document.getElementById('modal-confirm');
   
   if (btnConfirmCancel) btnConfirmCancel.addEventListener('click', closeDeleteModal);
   if (btnConfirmDelete) btnConfirmDelete.addEventListener('click', doDeleteStudent);
-  if (modalConfirm) {
-    modalConfirm.addEventListener('click', (e)=>{
-      if (e.target.id==='modal-confirm') closeDeleteModal();
-    });
-  }
 
   // Honesty modal
   const honestyCheckbox = document.getElementById('honesty-checkbox');
   const btnHonestyCancel = document.getElementById('btn-honesty-cancel');
   const btnHonestyConfirm = document.getElementById('btn-honesty-confirm');
-  const modalHonesty = document.getElementById('modal-honesty');
   
   if (honestyCheckbox) {
     honestyCheckbox.addEventListener('change', (e)=>{
@@ -8976,11 +8963,6 @@ function setupEventListeners() {
   }
   if (btnHonestyCancel) btnHonestyCancel.addEventListener('click', closeHonestyModal);
   if (btnHonestyConfirm) btnHonestyConfirm.addEventListener('click', confirmSaveJournal);
-  if (modalHonesty) {
-    modalHonesty.addEventListener('click', (e)=>{
-      if (e.target.id==='modal-honesty') closeHonestyModal();
-    });
-  }
 
   // Recap tab filters
   const recapStudentFilter = document.getElementById('recap-student-filter');
