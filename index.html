@@ -5432,7 +5432,7 @@ select { -webkit-font-smoothing: antialiased; }
 </head>
 <body>
 
-<script src="https://unpkg.com/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+<script async src="https://unpkg.com/lucide@0.263.0/dist/umd/lucide.min.js"></script>
 
 <!-- Firebase SDK v10 (Modular) -->
 <script type="module">
@@ -5442,7 +5442,6 @@ select { -webkit-font-smoothing: antialiased; }
   import {
     getAuth,
     onAuthStateChanged,
-    signInAnonymously,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signOut,
@@ -5479,7 +5478,6 @@ select { -webkit-font-smoothing: antialiased; }
   window.firebaseAuth = auth;
   window.firebaseAuthModules = {
     onAuthStateChanged,
-    signInAnonymously,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signOut,
@@ -6569,6 +6567,25 @@ function toast(msg, type='info') {
   setTimeout(()=>{ t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(()=>t.remove(),300); }, 3000);
 }
 
+function withTimeout(promise, timeoutMs, operation) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(operation + ' timed out after ' + timeoutMs + 'ms'));
+    }, timeoutMs);
+
+    Promise.resolve(promise).then(
+      value => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      error => {
+        clearTimeout(timer);
+        reject(error);
+      }
+    );
+  });
+}
+
 function showLoading(text='Loading...') {
   const overlay = document.getElementById('loading-overlay');
   const textEl = document.getElementById('loading-text');
@@ -6645,7 +6662,11 @@ async function checkForAppUpdate() {
 
     for (const versionUrl of candidateUrls) {
       try {
-        const response = await fetch(versionUrl, { cache: 'no-store' });
+        const response = await withTimeout(
+          fetch(versionUrl, { cache: 'no-store' }),
+          3000,
+          'Pengecekan versi aplikasi'
+        );
         if (!response.ok) {
           lastError = new Error('HTTP ' + response.status);
           continue;
@@ -6725,13 +6746,17 @@ async function populateSelect() {
   const sel = document.getElementById('login-student-select');
   if (!sel) return;
   sel.innerHTML = '<option value="">-- Pilih Siswa --</option>';
-  
+
   let students = [];
   try {
     await ensureFirebaseSession();
     if (window.rtdb && window.rtdbModules) {
       const { ref, get } = window.rtdbModules;
-      const snapshot = await get(ref(window.rtdb, 'publicRoster'));
+      const snapshot = await withTimeout(
+        get(ref(window.rtdb, 'publicRoster')),
+        5000,
+        'Memuat daftar siswa'
+      );
       students = buildStudentsArrayFromSnapshot(snapshot.val());
     } else {
       toast('Belum terhubung ke database siswa. Coba muat ulang halaman.', 'error');
@@ -6761,7 +6786,7 @@ async function ensureFirebaseSession() {
     throw new Error('Firebase Authentication belum siap');
   }
 
-  const { onAuthStateChanged, signInAnonymously } = window.firebaseAuthModules;
+  const { onAuthStateChanged, signOut } = window.firebaseAuthModules;
   let user = null;
 
   try {
@@ -6795,16 +6820,19 @@ async function ensureFirebaseSession() {
       );
     });
   } catch (error) {
-    console.warn('⚠️ Firebase auth timeout/offline, lanjutkan ke mode darurat:', error);
+    console.warn('⚠️ Firebase Auth belum dapat diverifikasi:', error);
     return false;
   }
 
-  if (!user) {
+  if (user && user.isAnonymous) {
     try {
-      await signInAnonymously(window.firebaseAuth);
-      return true;
+      await withTimeout(
+        signOut(window.firebaseAuth),
+        5000,
+        'Mengakhiri sesi anonymous lama'
+      );
     } catch (error) {
-      console.warn('⚠️ Gagal sign in anonim Firebase:', error);
+      console.error('❌ Gagal mengakhiri sesi anonymous lama:', error);
       return false;
     }
   }
@@ -8566,7 +8594,11 @@ async function forceSyncFromFirebase() {
     const dbRef = ref(window.rtdb);
     
     console.log('🔄 Force syncing semua data dari Firebase...');
-    const snapshot = await get(child(dbRef, '/'));
+    const snapshot = await withTimeout(
+      get(child(dbRef, '/')),
+      5000,
+      'Sinkronisasi data Firebase'
+    );
     
     if (snapshot.exists()) {
       const data = snapshot.val();
@@ -8652,7 +8684,7 @@ async function forceSyncFromFirebase() {
 async function init() {
   console.log('🚀 Loading application resources...');
 
-  await checkForAppUpdate();
+  void checkForAppUpdate();
   
   // Progress tracking helper
   const setLoadProgress = (pct, statusText) => {
@@ -8740,10 +8772,18 @@ async function init() {
               return;
             }
             const { ref, get } = window.rtdbModules;
-          const mappingSnapshot = await get(ref(window.rtdb, 'auth/studentByUid/' + user.uid));
+          const mappingSnapshot = await withTimeout(
+            get(ref(window.rtdb, 'auth/studentByUid/' + user.uid)),
+            5000,
+            'Memulihkan sesi siswa'
+          );
           if (mappingSnapshot.exists()) {
             const studentId = mappingSnapshot.val();
-            const studentSnapshot = await get(ref(window.rtdb, 'students/' + studentId));
+            const studentSnapshot = await withTimeout(
+              get(ref(window.rtdb, 'students/' + studentId)),
+              5000,
+              'Memulihkan data siswa'
+            );
             if (studentSnapshot.exists()) {
               currentUserRole = 'student';
               currentStudent = { id: studentId, ...studentSnapshot.val() };
@@ -8987,13 +9027,11 @@ function setupEventListeners() {
   console.log('✅ Bindings successfully registered');
 }
 
-// Trigger initialization when everything is loaded
-window.addEventListener('load', () => {
-  if (typeof showPage === 'function' && typeof init === 'function') {
-    showPage('page-opening');
-    init();
-  }
-});
+// Start as soon as the application markup and inline code are parsed.
+if (typeof showPage === 'function' && typeof init === 'function') {
+  showPage('page-opening');
+  init();
+}
 
 // Realtime Database listeners already handle background syncing automatically.
 
