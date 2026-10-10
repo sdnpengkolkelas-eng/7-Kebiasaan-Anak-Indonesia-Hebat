@@ -6760,24 +6760,56 @@ async function ensureFirebaseSession() {
   if (!window.firebaseAuth || !window.firebaseAuthModules) {
     throw new Error('Firebase Authentication belum siap');
   }
+
   const { onAuthStateChanged, signInAnonymously } = window.firebaseAuthModules;
-  const user = await new Promise((resolve, reject) => {
-    let unsubscribe = () => {};
-    unsubscribe = onAuthStateChanged(
-      window.firebaseAuth,
-      authenticatedUser => {
-        unsubscribe();
-        resolve(authenticatedUser);
-      },
-      error => {
-        unsubscribe();
-        reject(error);
-      }
-    );
-  });
-  if (!user) {
-    await signInAnonymously(window.firebaseAuth);
+  let user = null;
+
+  try {
+    user = await new Promise((resolve, reject) => {
+      let unsubscribe = () => {};
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          unsubscribe();
+          reject(new Error('Timeout menunggu Firebase Auth'));
+        }
+      }, 7000);
+
+      unsubscribe = onAuthStateChanged(
+        window.firebaseAuth,
+        authenticatedUser => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          unsubscribe();
+          resolve(authenticatedUser);
+        },
+        error => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          unsubscribe();
+          reject(error);
+        }
+      );
+    });
+  } catch (error) {
+    console.warn('⚠️ Firebase auth timeout/offline, lanjutkan ke mode darurat:', error);
+    return false;
   }
+
+  if (!user) {
+    try {
+      await signInAnonymously(window.firebaseAuth);
+      return true;
+    } catch (error) {
+      console.warn('⚠️ Gagal sign in anonim Firebase:', error);
+      return false;
+    }
+  }
+
+  return true;
 }
 
 // ============================================================
@@ -8637,7 +8669,7 @@ async function init() {
     
     setLoadProgress(35, 'Menghubungkan ke Portal cloud...');
     
-    // Wait for Firebase to be ready
+    // Wait for Firebase to be ready, but do not block forever when offline or network is restricted.
     let attempts = 0;
     console.log('⏳ Waiting untuk Firebase initialization...');
     while ((!window.rtdb || !window.firebaseAuth) && attempts < 50) {
@@ -8647,7 +8679,11 @@ async function init() {
     if (!window.rtdb || !window.firebaseAuth) {
       throw new Error('Firebase SDK gagal dimuat');
     }
-    await ensureFirebaseSession();
+
+    const sessionReady = await ensureFirebaseSession();
+    if (!sessionReady) {
+      throw new Error('Firebase Auth tidak dapat dijalankan di mode offline');
+    }
 
     setLoadProgress(55, 'Memuat daftar siswa...');
     
