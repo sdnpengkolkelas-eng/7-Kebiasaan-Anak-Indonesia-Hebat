@@ -14,6 +14,11 @@
 <link rel="apple-touch-icon" href="icon-rounded.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://kebiasaan-anak-6bd44-default-rtdb.asia-southeast1.firebasedatabase.app" crossorigin>
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js">
+<link rel="modulepreload" href="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* SPORTY MODERN DESIGN SYSTEM */
@@ -3489,9 +3494,43 @@ body { background: #f7f8fc; color: #24324a; }
 .monthly-day:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(36,50,74,.14); }
 .monthly-day.is-filled { background: linear-gradient(135deg, #279DB8, #5bb7d8); color: #fff; }
 .monthly-day.is-empty { background: #e9edf5; color: #52627a; }
+.monthly-day.is-locked { background: #fff3d6; color: #925b0a; }
 .monthly-day.is-selected { outline: 3px solid rgba(107,70,193,.28); outline-offset: 1px; }
 .monthly-day.is-today { box-shadow: inset 0 0 0 2px #6B46C1; }
 .monthly-day:disabled { opacity: .42; cursor: not-allowed; }
+.habit-tile.is-sequence-locked { opacity: .55; cursor: not-allowed; }
+.journal-sequence-notice {
+  margin: 0 16px 14px;
+  padding: 11px 13px;
+  border: 1px solid #f2cf83;
+  border-radius: 12px;
+  background: #fff8e7;
+  color: #754b08;
+  font-size: .8rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+.journal-missed-modal-card {
+  max-width: 420px;
+  text-align: center;
+}
+.journal-missed-modal-icon {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 12px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff0c2;
+  color: #9a6507;
+}
+.journal-missed-modal-icon svg { width: 27px; height: 27px; }
+.journal-missed-modal-copy {
+  margin: 0 0 18px;
+  color: #52627a;
+  font-size: .88rem;
+  line-height: 1.55;
+}
 @media (max-width: 380px) {
   .monthly-recap { margin-left: 14px; margin-right: 14px; padding: 12px; }
   .monthly-recap-legend { gap: 5px; font-size: .56rem; }
@@ -5446,7 +5485,7 @@ select { -webkit-font-smoothing: antialiased; }
 <script type="module">
   // Import Firebase modules
   import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-  import { getDatabase, ref, set, get, child, remove, onValue, update, query, equalTo, orderByChild } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+  import { getDatabase, ref, set, get, child, remove, onValue, update, query, equalTo, orderByChild, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
   import {
     getAuth,
     onAuthStateChanged,
@@ -5482,7 +5521,7 @@ select { -webkit-font-smoothing: antialiased; }
 
   // Make RTDB available globally
   window.rtdb = db;
-  window.rtdbModules = { ref, set, get, child, remove, onValue, update, query, equalTo, orderByChild };
+  window.rtdbModules = { ref, set, get, child, remove, onValue, update, query, equalTo, orderByChild, serverTimestamp };
   window.firebaseAuth = auth;
   window.firebaseAuthModules = {
     onAuthStateChanged,
@@ -5613,6 +5652,9 @@ select { -webkit-font-smoothing: antialiased; }
         <div class="topbar-name" id="topbar-name" style="color: #ffffff !important;">Nama Siswa</div>
         <div class="topbar-class" id="topbar-class" style="color: #b9f3f5 !important;">Kelas -</div>
       </div>
+      <button class="btn-game btn-game-cyan" id="btn-student-change-password" type="button" title="Ganti password" aria-label="Ganti password" style="padding:8px 10px;font-size:.72rem">
+        <i data-lucide="key-round" style="width:14px;height:14px"></i>
+      </button>
       <button class="btn-game btn-game-red btn-logout" id="btn-journal-logout">
         <i data-lucide="log-out" style="width:14px;height:14px"></i> Keluar
       </button>
@@ -5629,6 +5671,7 @@ select { -webkit-font-smoothing: antialiased; }
         <input type="date" id="entry-date">
       </div>
     </div>
+    <div class="journal-sequence-notice" id="journal-sequence-notice" role="status" aria-live="polite" hidden></div>
 
     <div class="monthly-recap" id="monthly-recap" aria-label="Rekap jurnal bulan ini">
       <div class="monthly-recap-header">
@@ -5656,6 +5699,17 @@ select { -webkit-font-smoothing: antialiased; }
       <button class="btn-game btn-game-green btn-save" id="btn-save-journal">
         <i data-lucide="send" style="width:18px;height:18px"></i> Kirim
       </button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-missed-journal" role="dialog" aria-modal="true" aria-labelledby="missed-journal-title">
+    <div class="modal-card journal-missed-modal-card">
+      <div class="journal-missed-modal-icon"><i data-lucide="calendar-clock"></i></div>
+      <div class="modal-title" id="missed-journal-title">Ada Jurnal Hari yang Terlewat</div>
+      <p class="journal-missed-modal-copy" id="missed-journal-copy"></p>
+      <div class="modal-footer" style="justify-content:center">
+        <button class="btn-game btn-game-green" id="btn-missed-journal-fill" type="button">Isi Jurnal Sekarang</button>
+      </div>
     </div>
   </div>
 
@@ -5771,6 +5825,13 @@ select { -webkit-font-smoothing: antialiased; }
       
       <!-- TAB: STUDENTS -->
       <div id="tab-students" class="tab-content hidden">
+        <div class="participation-card" style="margin-bottom:18px">
+          <div class="participation-header">Permintaan Ganti Password Siswa</div>
+          <p style="margin:0 0 12px;font-size:.82rem;color:#475569">
+            Setujui permintaan sebelum siswa dapat mengganti password. Setelah selesai, tutup permintaan agar siswa dapat meminta lagi di lain waktu.
+          </p>
+          <div id="password-change-requests" aria-live="polite"></div>
+        </div>
         <div class="search-add-bar">
           <input type="text" class="search-input form-group select" style="margin-bottom:0" id="student-search" placeholder="🔍 Cari nama siswa...">
           <button class="btn-game btn-game-cyan btn-add" id="btn-add-student">
@@ -5939,14 +6000,51 @@ select { -webkit-font-smoothing: antialiased; }
         <label>No. Absen</label>
         <input type="number" id="modal-student-number" placeholder="1">
       </div>
-      <div class="form-group">
-        <label>Password Akun Siswa (minimal 6 karakter)</label>
+      <div class="form-group" id="student-account-password-group">
+        <label id="modal-student-pin-label">Password Akun Siswa (minimal 6 karakter)</label>
         <input type="password" id="modal-student-pin" placeholder="Buat password minimal 6 karakter" autocomplete="new-password">
       </div>
+      <p id="student-password-change-note" hidden style="margin:0 0 14px;font-size:.82rem;color:#475569">
+        Password akun tidak diubah dari panel guru. Siswa dapat menggantinya dari halaman jurnal dengan password lama.
+      </p>
       
       <div class="modal-footer">
         <button class="btn-game btn-cancel" id="btn-modal-student-cancel">Batal</button>
         <button class="btn-game btn-game-green" id="btn-modal-student-save" style="padding: 10px 22px;">Simpan</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-student-password">
+    <div class="modal-card">
+      <div class="modal-title">Ganti Password Saya</div>
+      <p style="margin-bottom:14px;font-size:.86rem;color:#475569">
+        Minta persetujuan guru terlebih dahulu. Setelah disetujui, masukkan password lama dan password baru. Jurnal tidak berubah.
+      </p>
+      <p style="margin-bottom:14px;font-size:.82rem;color:#9a3412">
+        Jika lupa password lama, minta bantuan guru; cara ini tidak dapat mereset password yang terlupa.
+      </p>
+      <p id="student-password-request-status" role="status" aria-live="polite" style="margin-bottom:12px;font-size:.86rem;font-weight:700"></p>
+      <button class="btn-game btn-game-cyan" id="btn-student-password-request" type="button">Minta Persetujuan Guru</button>
+      <div id="student-password-fields" hidden>
+      <div class="form-group">
+        <label for="student-old-password">Password Lama</label>
+        <input type="password" id="student-old-password" autocomplete="current-password">
+      </div>
+      <div class="form-group">
+        <label for="student-new-password">Password Baru (minimal 6 karakter)</label>
+        <input type="password" id="student-new-password" autocomplete="new-password">
+      </div>
+      <div class="form-group">
+        <label for="student-confirm-password">Ulangi Password Baru</label>
+        <input type="password" id="student-confirm-password" autocomplete="new-password">
+      </div>
+      <div style="margin-top:14px">
+        <button class="btn-game btn-game-green" id="btn-student-password-save" type="button">Simpan Password</button>
+      </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-game btn-cancel" id="btn-student-password-cancel" type="button">Tutup</button>
       </div>
     </div>
   </div>
@@ -6024,6 +6122,7 @@ const HABITS = [
 
 const MAX_PTS = HABITS.reduce((a,h)=>a+h.maxPts,0); // 40
 const LS_KEY = 'jurnal7kb';
+const LS_ROSTER_KEY = 'jurnal7kb-public-roster';
 const TEACHER_AUTH_UID = 'YOmcS0HkFuVrZypsEPuxE1PPHNy2';
 const STUDENT_AUTH_DOMAIN = 'students.7kebiasaan.id';
 let teacherProfile = {
@@ -6234,12 +6333,47 @@ async function saveStudentRecord(student, password = '') {
     return false;
   }
 
-  if (password.length < 6) {
-    toast('Masukkan password akun siswa minimal 6 karakter untuk memasangkan akunnya.', 'error');
+  if (password && password.length < 6) {
+    toast('Password akun siswa minimal 6 karakter.', 'error');
     return false;
   }
 
   const accountEmail = studentAuthEmail(student.id);
+  const existingStudent = cachedStudents.find(existing => existing.id === student.id);
+  if (existingStudent) {
+    if (password) {
+      toast('Untuk mengganti password siswa tanpa biaya backend, lakukan dari akun siswa dengan password lama.', 'error');
+      return false;
+    }
+    student.authUid = existingStudent.authUid;
+    student.authEmail = existingStudent.authEmail || accountEmail;
+    try {
+      const { ref, set } = window.rtdbModules;
+      const payload = normalizeStudentsPayload([student])[student.id];
+      await Promise.all([
+        set(ref(window.rtdb, 'students/' + student.id), payload),
+        set(ref(window.rtdb, 'publicRoster/' + student.id), normalizePublicRosterStudent(student))
+      ]);
+      cachedStudents = [
+        ...cachedStudents.filter(existing => existing.id !== student.id),
+        student
+      ];
+      recapFiltersReady = false;
+      saveLocalCache();
+      refreshActiveViews();
+      return true;
+    } catch (error) {
+      console.error('❌ Error updating student record:', error);
+      toast('Gagal menyimpan perubahan siswa: ' + (error.message || 'kesalahan Firebase'), 'error');
+      return false;
+    }
+  }
+
+  if (password.length < 6) {
+    toast('Masukkan password akun siswa minimal 6 karakter untuk membuat akunnya.', 'error');
+    return false;
+  }
+
   let provisionedAuthUid = '';
   let provisionedAuthUser = null;
   let provisionedAccountWasCreated = false;
@@ -6376,6 +6510,7 @@ async function deleteStudent(studentId) {
     // Hapus siswa dari database
     await remove(ref(window.rtdb, 'students/' + studentId));
     await remove(ref(window.rtdb, 'publicRoster/' + studentId));
+    await remove(ref(window.rtdb, 'passwordChangeRequests/' + studentId));
     if (student && student.authUid) {
       await remove(ref(window.rtdb, 'auth/studentByUid/' + student.authUid));
     }
@@ -6418,6 +6553,57 @@ async function getJournals() {
     return journals;
   }
   return cachedJournals;
+}
+
+function journalHasContent(entry) {
+  return Boolean(entry && HABITS.some(habit => entry[habit.key] !== undefined));
+}
+
+function findFirstMissingJournalDate(beforeDate, journals = cachedJournals) {
+  if (!currentStudent || !beforeDate) return null;
+  const monthKey = beforeDate.slice(0, 7);
+  if (monthKey !== todayStr().slice(0, 7)) return null;
+
+  const dayLimit = Number(beforeDate.slice(8, 10));
+  for (let day = 1; day < dayLimit; day++) {
+    const date = monthKey + '-' + String(day).padStart(2, '0');
+    if (!journalHasContent(journals[currentStudent.id + '_' + date])) return date;
+  }
+  return null;
+}
+
+function getJournalSequenceBlock(date, journals = cachedJournals) {
+  if (!currentStudent || !date || date.slice(0, 7) !== todayStr().slice(0, 7)) return null;
+  const missingDate = findFirstMissingJournalDate(date, journals);
+  return missingDate ? { missingDate, date } : null;
+}
+
+function showMissedJournalNotice(date) {
+  const modal = document.getElementById('modal-missed-journal');
+  const copy = document.getElementById('missed-journal-copy');
+  if (!modal || !copy || !date) return;
+  copy.textContent = `Jurnal tanggal ${fmtDate(date)} belum terisi. Silakan isi tanggal tersebut terlebih dahulu. Jurnal untuk tanggal setelahnya akan terkunci sampai semua tanggal sebelumnya terisi.`;
+  modal.classList.add('active');
+  if (typeof lucide !== 'undefined') lucide.createIcons({ root: modal });
+}
+
+function closeMissedJournalNotice() {
+  const modal = document.getElementById('modal-missed-journal');
+  if (modal) modal.classList.remove('active');
+}
+
+function updateJournalSequenceNotice(date) {
+  const notice = document.getElementById('journal-sequence-notice');
+  const saveButton = document.getElementById('btn-save-journal');
+  if (!notice) return null;
+
+  const block = getJournalSequenceBlock(date);
+  notice.hidden = !block;
+  if (block) {
+    notice.textContent = `Tanggal ini terkunci. Isi jurnal ${fmtDate(block.missingDate)} terlebih dahulu, lalu lanjutkan ke tanggal ini.`;
+  }
+  if (saveButton) saveButton.disabled = Boolean(block);
+  return block;
 }
 
 async function saveJournalEntry(studentId, date, entryData) {
@@ -6558,8 +6744,11 @@ function gradeClass(g) {
   if (g.startsWith('C')) return 'grade-C';
   return 'grade-D';
 }
-function todayStr() { return new Date().toISOString().slice(0,10); }
-function monthStr() { return new Date().toISOString().slice(0,7); }
+function todayStr() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+function monthStr() { return todayStr().slice(0, 7); }
 function fmtDate(d) {
   if (!d) return '';
   const dt = new Date(d+'T00:00:00');
@@ -6605,6 +6794,79 @@ function showLoading(text='Loading...') {
 function hideLoading() {
   const overlay = document.getElementById('loading-overlay');
   overlay.classList.remove('active');
+}
+
+async function applyAppUpdate(latestVersion) {
+  const cacheErrors = [];
+  if ('caches' in window) {
+    try {
+      const cacheNames = await window.caches.keys();
+      const appBasePath = new URL('.', window.location.href).pathname;
+      const appFiles = new Set([
+        window.location.pathname,
+        new URL('index.html', window.location.href).pathname,
+        new URL('version.json', window.location.href).pathname,
+        new URL('manifest.json', window.location.href).pathname,
+        new URL('icon.png', window.location.href).pathname,
+        new URL('icon-rounded.png', window.location.href).pathname
+      ]);
+      for (const cacheName of cacheNames) {
+        try {
+          const cache = await window.caches.open(cacheName);
+          const requests = await cache.keys();
+          const appRequests = requests.filter(request => {
+            const requestUrl = new URL(request.url);
+            return requestUrl.origin === window.location.origin &&
+              requestUrl.pathname.startsWith(appBasePath) &&
+              appFiles.has(requestUrl.pathname);
+          });
+          const results = await Promise.allSettled(
+            appRequests.map(request => cache.delete(request))
+          );
+          if (results.some(result => result.status === 'rejected' || !result.value)) {
+            cacheErrors.push('Aset aplikasi di cache ' + cacheName);
+          }
+        } catch (error) {
+          console.error('❌ Gagal membersihkan cache ' + cacheName + ':', error);
+          cacheErrors.push('Cache ' + cacheName);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Gagal membersihkan Cache Storage:', error);
+      cacheErrors.push('Cache Storage');
+    }
+  }
+
+  if (navigator.serviceWorker) {
+    try {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      const currentUrl = new URL(window.location.href);
+      const appRegistrations = registrations.filter(registration => {
+        const scope = new URL(registration.scope);
+        return scope.origin === currentUrl.origin && currentUrl.href.startsWith(scope.href);
+      });
+      const results = await Promise.allSettled(
+        appRegistrations.map(registration => registration.unregister())
+      );
+      results.forEach((result, index) => {
+        if (result.status === 'rejected' || !result.value) {
+          cacheErrors.push('Service Worker ' + appRegistrations[index].scope);
+        }
+      });
+    } catch (error) {
+      console.error('❌ Gagal menonaktifkan Service Worker aplikasi:', error);
+      cacheErrors.push('Service Worker');
+    }
+  }
+
+  if (cacheErrors.length) {
+    console.error('Sebagian cache aplikasi tidak berhasil dibersihkan:', cacheErrors);
+  }
+
+  const updateUrl = new URL(window.location.href);
+  updateUrl.searchParams.set('__app_version', latestVersion);
+  updateUrl.searchParams.set('__app_refresh', String(Date.now()));
+  window.location.replace(updateUrl.href);
 }
 
 function showAppUpdateDialog(currentVersion, latestVersion) {
@@ -6700,9 +6962,23 @@ async function checkForAppUpdate() {
     }
 
     const savedVersion = localStorage.getItem('appVersion');
+    const requestedVersion = new URL(window.location.href).searchParams.get('__app_version');
+
+    if (requestedVersion && requestedVersion === remoteVersion) {
+      try {
+        localStorage.setItem('appVersion', remoteVersion);
+      } catch (error) {
+        console.error('❌ Gagal menyimpan versi aplikasi:', error);
+      }
+      return;
+    }
 
     if (!savedVersion) {
-      localStorage.setItem('appVersion', remoteVersion);
+      try {
+        localStorage.setItem('appVersion', remoteVersion);
+      } catch (error) {
+        console.error('❌ Gagal menyimpan versi aplikasi:', error);
+      }
       console.log('📦 Versi aplikasi disimpan pertama kali:', remoteVersion);
       return;
     }
@@ -6711,8 +6987,7 @@ async function checkForAppUpdate() {
       const shouldUpdate = await showAppUpdateDialog(savedVersion, remoteVersion);
 
       if (shouldUpdate) {
-        localStorage.setItem('appVersion', remoteVersion);
-        window.location.reload();
+        await applyAppUpdate(remoteVersion);
         return;
       }
 
@@ -6751,52 +7026,83 @@ function showPage(id) {
 // ============================================================
 // POPULATE LOGIN SELECT
 // ============================================================
-async function populateSelect() {
+function renderLoginRoster(students, statusMessage) {
   const sel = document.getElementById('login-student-select');
   if (!sel) return;
-  sel.innerHTML = '<option value="">-- Pilih Siswa --</option>';
+  const selectedId = sel.value;
+  const sortedStudents = [...students].sort((a, b) => {
+    const kelasA = (a.kelas || '').toString();
+    const kelasB = (b.kelas || '').toString();
+    return kelasA.localeCompare(kelasB) || ((a.absen || 0) - (b.absen || 0));
+  });
+  sel.replaceChildren(new Option('-- Pilih Siswa --', ''));
+  sortedStudents.forEach(student => {
+    const option = new Option(student.name, student.id);
+    sel.appendChild(option);
+  });
+  if (sortedStudents.some(student => student.id === selectedId)) {
+    sel.value = selectedId;
+  }
   const status = document.getElementById('roster-load-status');
-  if (status) status.textContent = 'Memuat daftar nama siswa...';
+  if (status) status.textContent = statusMessage || (sortedStudents.length ? '' : 'Belum ada data siswa. Hubungi guru.');
+}
 
-  let students = [];
+async function populateSelect(refreshFromFirebase = true) {
+  const sel = document.getElementById('login-student-select');
+  if (!sel) return;
+  const status = document.getElementById('roster-load-status');
+  let cachedRoster = [];
   try {
-    await ensureFirebaseSession();
-    if (window.rtdb && window.rtdbModules) {
-      const { ref, get } = window.rtdbModules;
-      const snapshot = await withTimeout(
-        get(ref(window.rtdb, 'publicRoster')),
-        5000,
-        'Memuat daftar siswa'
+    const storedRoster = JSON.parse(localStorage.getItem(LS_ROSTER_KEY) || '[]');
+    if (Array.isArray(storedRoster)) {
+      cachedRoster = storedRoster.filter(student =>
+        student && typeof student.id === 'string' && typeof student.name === 'string'
       );
-      students = buildStudentsArrayFromSnapshot(snapshot.val());
-    } else {
-      if (status) status.textContent = 'Database belum siap. Periksa koneksi internet lalu muat ulang.';
-      return;
     }
+  } catch (error) {
+    console.warn('⚠️ Cache daftar siswa tidak dapat dibaca:', error);
+  }
+  renderLoginRoster(cachedRoster, refreshFromFirebase && !cachedRoster.length
+    ? 'Memuat daftar nama siswa...'
+    : !refreshFromFirebase && !cachedRoster.length
+      ? 'Menghubungkan ke Firebase...'
+      : '');
+
+  if (!refreshFromFirebase) return;
+
+  try {
+    if (!window.rtdb || !window.rtdbModules) {
+      throw new Error('Firebase Database belum siap');
+    }
+    const { ref, get } = window.rtdbModules;
+    const snapshot = await withTimeout(
+      get(ref(window.rtdb, 'publicRoster')),
+      5000,
+      'Memuat daftar siswa'
+    );
+    const students = buildStudentsArrayFromSnapshot(snapshot.val());
+    const safeRoster = students.map(student => ({
+      id: student.id,
+      ...normalizePublicRosterStudent(student)
+    }));
+    try {
+      localStorage.setItem(LS_ROSTER_KEY, JSON.stringify(safeRoster));
+    } catch (storageError) {
+      console.warn('⚠️ Cache daftar siswa tidak dapat disimpan:', storageError);
+    }
+    renderLoginRoster(safeRoster);
   } catch (error) {
     console.error('Failed to load public student roster:', error);
     if (status) {
       const errorCode = String(error && error.code || '').toLowerCase();
       const errorMessage = String(error && error.message || '').toLowerCase();
-      status.textContent = errorCode.includes('permission') || errorMessage.includes('permission denied')
-        ? 'Daftar siswa belum dapat diakses. Admin perlu menerapkan aturan akses Firebase.'
-        : 'Daftar siswa gagal dimuat. Periksa koneksi internet lalu muat ulang.';
+      status.textContent = cachedRoster.length
+        ? 'Menampilkan daftar tersimpan; gagal memperbarui dari Firebase.'
+        : errorCode.includes('permission') || errorMessage.includes('permission denied')
+          ? 'Daftar siswa belum dapat diakses. Admin perlu menerapkan aturan akses Firebase.'
+          : 'Daftar siswa gagal dimuat. Periksa koneksi internet lalu muat ulang.';
     }
-    return;
   }
-  students.sort((a,b)=>{
-    const kelasA = (a.kelas || '').toString();
-    const kelasB = (b.kelas || '').toString();
-    return kelasA.localeCompare(kelasB) || (a.absen-b.absen);
-  });
-  
-  students.forEach(s=>{
-    const o = document.createElement('option');
-    o.value = s.id;
-    o.textContent = s.name;
-    sel.appendChild(o);
-  });
-  if (status) status.textContent = students.length ? '' : 'Belum ada data siswa. Hubungi guru.';
 }
 
 async function ensureFirebaseSession() {
@@ -6897,7 +7203,7 @@ async function doStudentLogin() {
       toast('Data siswa tidak ditemukan. Hubungi guru.', 'error');
       return;
     }
-    currentStudent = { id: sel.value, ...studentSnapshot.val() };
+    currentStudent = { id: sel.value, ...studentSnapshot.val(), authUid: credential.user.uid };
     currentUserRole = 'student';
     try { localStorage.setItem('currentStudentSession', JSON.stringify({ id: currentStudent.id })); } catch(e) {}
     await openJournalPage();
@@ -6917,6 +7223,198 @@ async function doStudentLogin() {
       toast('Password tidak cocok dengan akun siswa Firebase.', 'error');
     } else {
       toast('Login Firebase gagal (' + (error.code || 'error') + '). Periksa koneksi atau Authentication.', 'error');
+    }
+  } finally {
+    hideLoading();
+  }
+}
+
+function openStudentPasswordModal() {
+  if (currentUserRole !== 'student' || !currentStudent) {
+    toast('Silakan masuk sebagai siswa terlebih dahulu.', 'error');
+    return;
+  }
+  if (unsubStudentPasswordRequest) unsubStudentPasswordRequest();
+  document.getElementById('student-old-password').value = '';
+  document.getElementById('student-new-password').value = '';
+  document.getElementById('student-confirm-password').value = '';
+  document.getElementById('modal-student-password').classList.add('active');
+  document.getElementById('student-password-request-status').textContent = 'Memeriksa status persetujuan...';
+  document.getElementById('btn-student-password-request').hidden = true;
+  document.getElementById('student-password-fields').hidden = true;
+
+  if (!window.rtdb || !window.rtdbModules || !currentStudent.id) {
+    document.getElementById('student-password-request-status').textContent = 'Layanan Firebase belum siap.';
+    return;
+  }
+  const { ref, onValue } = window.rtdbModules;
+  unsubStudentPasswordRequest = onValue(
+    ref(window.rtdb, 'passwordChangeRequests/' + currentStudent.id),
+    snapshot => renderStudentPasswordRequest(snapshot.val()),
+    error => {
+      console.error('Could not read student password request status:', error);
+      document.getElementById('student-password-request-status').textContent =
+        'Gagal memeriksa persetujuan. Periksa koneksi atau minta bantuan guru.';
+    }
+  );
+}
+
+function closeStudentPasswordModal() {
+  document.getElementById('modal-student-password').classList.remove('active');
+  if (unsubStudentPasswordRequest) {
+    unsubStudentPasswordRequest();
+    unsubStudentPasswordRequest = null;
+  }
+  document.getElementById('student-old-password').value = '';
+  document.getElementById('student-new-password').value = '';
+  document.getElementById('student-confirm-password').value = '';
+}
+
+function renderStudentPasswordRequest(request) {
+  const status = document.getElementById('student-password-request-status');
+  const requestButton = document.getElementById('btn-student-password-request');
+  const fields = document.getElementById('student-password-fields');
+  const saveButton = document.getElementById('btn-student-password-save');
+  if (!status || !requestButton || !fields || !saveButton) return;
+
+  requestButton.hidden = true;
+  fields.hidden = true;
+  saveButton.disabled = true;
+
+  if (!request) {
+    status.textContent = 'Belum ada permintaan. Minta persetujuan guru terlebih dahulu.';
+    requestButton.hidden = false;
+    return;
+  }
+  if (!request.status || request.status === 'pending') {
+    status.textContent = 'Permintaan sudah dikirim. Tunggu persetujuan guru.';
+    return;
+  }
+  if (request.status === 'approved' && !request.consumedAt) {
+    status.textContent = 'Disetujui guru. Masukkan password lama dan password baru.';
+    fields.hidden = false;
+    saveButton.disabled = false;
+    return;
+  }
+  if (request.status === 'rejected') {
+    status.textContent = 'Permintaan belum disetujui. Hubungi guru untuk membahasnya.';
+    return;
+  }
+  if (request.status === 'approved' && request.consumedAt) {
+    status.textContent = 'Password sudah diganti. Minta guru menutup permintaan ini sebelum mengajukan lagi.';
+    return;
+  }
+  status.textContent = 'Status permintaan tidak dikenal. Minta bantuan guru.';
+}
+
+async function requestStudentPasswordApproval() {
+  const user = window.firebaseAuth && window.firebaseAuth.currentUser;
+  if (
+    currentUserRole !== 'student' ||
+    !currentStudent ||
+    !user ||
+    user.uid !== currentStudent.authUid ||
+    !window.rtdb ||
+    !window.rtdbModules
+  ) {
+    toast('Sesi siswa tidak aktif. Keluar lalu masuk kembali.', 'error');
+    return;
+  }
+
+  const button = document.getElementById('btn-student-password-request');
+  button.disabled = true;
+  try {
+    const { ref, get, set, serverTimestamp } = window.rtdbModules;
+    const requestRef = ref(window.rtdb, 'passwordChangeRequests/' + currentStudent.id);
+    const existingRequest = await get(requestRef);
+    if (existingRequest.exists()) {
+      renderStudentPasswordRequest(existingRequest.val());
+      toast('Data permintaan ganti password sudah ada. Minta guru memeriksa atau menutupnya.', 'error');
+      return;
+    }
+
+    await set(
+      ref(window.rtdb, 'passwordChangeRequests/' + currentStudent.id + '/requestedAt'),
+      serverTimestamp()
+    );
+    toast('Permintaan persetujuan sudah dikirim ke guru.', 'success');
+  } catch (error) {
+    console.error('Failed to submit student password change request:', error);
+    if (error.code === 'PERMISSION_DENIED') {
+      toast('Firebase menolak akses. Aturan permintaan password mungkin belum diperbarui, atau data permintaan tidak dapat dibaca. Minta guru memeriksa aturan Firebase.', 'error');
+    } else {
+      toast('Permintaan gagal dikirim. Periksa koneksi Firebase lalu coba lagi.', 'error');
+    }
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function changeStudentPassword() {
+  const oldPassword = document.getElementById('student-old-password').value;
+  const newPassword = document.getElementById('student-new-password').value;
+  const confirmPassword = document.getElementById('student-confirm-password').value;
+  const user = window.firebaseAuth && window.firebaseAuth.currentUser;
+
+  if (currentUserRole !== 'student' || !currentStudent || !user || user.uid !== currentStudent.authUid) {
+    toast('Sesi siswa tidak aktif. Keluar lalu masuk kembali untuk mengganti password.', 'error');
+    return;
+  }
+  if (!oldPassword) {
+    toast('Masukkan password lama.', 'error');
+    return;
+  }
+  if (newPassword.length < 6) {
+    toast('Password baru minimal 6 karakter.', 'error');
+    return;
+  }
+  if (newPassword !== confirmPassword) {
+    toast('Konfirmasi password baru tidak cocok.', 'error');
+    return;
+  }
+  if (oldPassword === newPassword) {
+    toast('Password baru harus berbeda dari password lama.', 'error');
+    return;
+  }
+  if (!user.email || !window.firebaseAuthModules) {
+    toast('Data akun Firebase tidak lengkap. Hubungi guru.', 'error');
+    return;
+  }
+
+  showLoading('Memverifikasi dan mengganti password...');
+  let passwordChanged = false;
+  try {
+    const { EmailAuthProvider, reauthenticateWithCredential, updatePassword } = window.firebaseAuthModules;
+    const { ref, get, set, serverTimestamp } = window.rtdbModules;
+    const requestRef = ref(window.rtdb, 'passwordChangeRequests/' + currentStudent.id);
+    const requestSnapshot = await get(requestRef);
+    const request = requestSnapshot.val();
+    if (!request || request.status !== 'approved' || request.consumedAt) {
+      renderStudentPasswordRequest(request);
+      toast('Persetujuan guru tidak tersedia atau sudah digunakan.', 'error');
+      return;
+    }
+    const credential = EmailAuthProvider.credential(user.email, oldPassword);
+    await reauthenticateWithCredential(user, credential);
+    await updatePassword(user, newPassword);
+    passwordChanged = true;
+    await set(ref(window.rtdb, 'passwordChangeRequests/' + currentStudent.id + '/consumedAt'), serverTimestamp());
+    closeStudentPasswordModal();
+    toast('Password berhasil diganti. Jurnal dan data siswa tetap aman.', 'success');
+  } catch (error) {
+    console.error('Student password change failed:', error);
+    if (passwordChanged) {
+      toast('Password sudah berubah, tetapi status persetujuan gagal diperbarui. Hubungi guru sebelum mencoba lagi.', 'error');
+    } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+      toast('Password lama tidak cocok.', 'error');
+    } else if (error.code === 'auth/weak-password') {
+      toast('Password baru terlalu lemah. Gunakan minimal 6 karakter.', 'error');
+    } else if (error.code === 'auth/requires-recent-login') {
+      toast('Sesi sudah terlalu lama. Keluar, masuk kembali, lalu ulangi.', 'error');
+    } else if (error.code === 'auth/network-request-failed') {
+      toast('Tidak ada koneksi internet. Password belum diubah.', 'error');
+    } else {
+      toast('Password gagal diubah (' + (error.code || 'error') + '). Coba lagi atau hubungi guru.', 'error');
     }
   } finally {
     hideLoading();
@@ -6957,14 +7455,17 @@ async function openJournalPage() {
   if (av) av.textContent = s.name ? s.name.charAt(0).toUpperCase() : '?';
   
   const today = todayStr();
+  const journals = await getJournals();
+  const firstMissingDate = findFirstMissingJournalDate(today, journals);
+  const initialDate = firstMissingDate || today;
   const dateEl = document.getElementById('entry-date');
-  if (dateEl) dateEl.value = today;
+  if (dateEl) dateEl.value = initialDate;
   
-  console.log(`📅 Loading data untuk: ${today}`);
-  await loadEntryData(today);
+  console.log(`📅 Loading data untuk: ${initialDate}`);
+  await loadEntryData(initialDate, journals);
   console.log(`✅ Entry data loaded: ${Object.keys(entryData).length} kebiasaan`);
   buildHabitGrid();
-  await renderMonthlyRecap(today);
+  await renderMonthlyRecap(initialDate, journals);
   const journalPage = document.getElementById('page-journal');
   const recap = document.getElementById('monthly-recap');
   if (journalPage) journalPage.scrollTop = 0;
@@ -6974,13 +7475,14 @@ async function openJournalPage() {
   const total = calcTotal();
   console.log(`📊 Total XP sekarang: ${total}`);
   showPage('page-journal');
+  if (firstMissingDate) showMissedJournalNotice(firstMissingDate);
 }
 
 // ============================================================
 // JOURNAL DATA
 // ============================================================
-async function loadEntryData(date) {
-  const journals = await getJournals();
+async function loadEntryData(date, knownJournals) {
+  const journals = knownJournals || await getJournals();
   const key = currentStudent.id+'_'+date;
   
   if (journals[key]) {
@@ -7001,9 +7503,10 @@ async function loadEntryData(date) {
     entryData = {};
     console.log(`📭 Belum ada entri untuk: ${key}`);
   }
+  updateJournalSequenceNotice(date);
 }
 
-async function renderMonthlyRecap(monthValue) {
+async function renderMonthlyRecap(monthValue, knownJournals) {
   const daysEl = document.getElementById('monthly-days');
   const summaryEl = document.getElementById('monthly-recap-summary');
   const dateEl = document.getElementById('entry-date');
@@ -7014,27 +7517,31 @@ async function renderMonthlyRecap(monthValue) {
   const [year, monthNumber] = monthKey.split('-').map(Number);
   const daysInMonth = new Date(year, monthNumber, 0).getDate();
   const today = todayStr();
-  const journals = await getJournals();
-  const isFilled = (date) => {
-    const entry = journals[currentStudent.id + '_' + date];
-    return Boolean(entry && HABITS.some(h => entry[h.key] !== undefined));
-  };
+  const journals = knownJournals || await getJournals();
 
   let filledCount = 0;
   daysEl.innerHTML = '';
   for (let day = 1; day <= daysInMonth; day++) {
     const date = monthKey + '-' + String(day).padStart(2, '0');
-    const filled = isFilled(date);
+    const filled = journalHasContent(journals[currentStudent.id + '_' + date]);
     const isFuture = date > today;
+    const sequenceBlock = getJournalSequenceBlock(date, journals);
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'monthly-day ' + (filled ? 'is-filled' : 'is-empty');
+    if (sequenceBlock) button.classList.add('is-locked');
     if (date === dateEl.value) button.classList.add('is-selected');
     if (date === today) button.classList.add('is-today');
     button.disabled = isFuture;
     button.dataset.date = date;
-    button.title = isFuture ? 'Tanggal belum tersedia' : (filled ? 'Jurnal sudah terisi' : 'Isi jurnal tanggal ini');
-    button.innerHTML = `<span>${day}</span><small>${filled ? 'OK' : isFuture ? '-' : 'Isi'}</small>`;
+    button.title = isFuture
+      ? 'Tanggal belum tersedia'
+      : sequenceBlock
+        ? `Isi jurnal tanggal ${sequenceBlock.missingDate.slice(-2)} terlebih dahulu`
+        : filled
+          ? 'Jurnal sudah terisi'
+          : 'Isi jurnal tanggal ini';
+    button.innerHTML = `<span>${day}</span><small>${filled ? 'OK' : isFuture ? '-' : sequenceBlock ? 'Kunci' : 'Isi'}</small>`;
     if (filled) filledCount++;
     if (!isFuture) {
       button.addEventListener('click', async () => {
@@ -7043,6 +7550,9 @@ async function renderMonthlyRecap(monthValue) {
         buildHabitGrid();
         updateHero();
         await renderMonthlyRecap(monthKey);
+        if (sequenceBlock) {
+          toast(`Isi jurnal tanggal ${fmtDate(sequenceBlock.missingDate)} terlebih dahulu.`, 'warning');
+        }
       });
     }
     daysEl.appendChild(button);
@@ -7062,12 +7572,19 @@ async function saveEntryData(date) {
 // ============================================================
 function buildHabitGrid() {
   const grid = document.getElementById('habit-grid');
+  const dateEl = document.getElementById('entry-date');
+  const sequenceBlock = updateJournalSequenceNotice(dateEl ? dateEl.value : todayStr());
   grid.innerHTML = '';
   HABITS.forEach((h, index)=>{
     const pts = getHabitPts(h);
     const filled = pts > 0 || entryData[h.key] !== undefined;
     const tile = document.createElement('div');
     tile.className = 'habit-tile'+(filled?' filled':'');
+    if (sequenceBlock) {
+      tile.classList.add('is-sequence-locked');
+      tile.setAttribute('aria-disabled', 'true');
+      tile.title = `Isi jurnal ${fmtDate(sequenceBlock.missingDate)} terlebih dahulu`;
+    }
     tile.dataset.key = h.key;
     tile.dataset.quest = index + 1;
     tile.innerHTML = `
@@ -7176,6 +7693,12 @@ function updateHero() {
 // POPUP DIALOGUE
 // ============================================================
 function openPopup(h) {
+  const date = document.getElementById('entry-date')?.value || todayStr();
+  const sequenceBlock = getJournalSequenceBlock(date);
+  if (sequenceBlock) {
+    toast(`Isi jurnal tanggal ${fmtDate(sequenceBlock.missingDate)} terlebih dahulu.`, 'warning');
+    return;
+  }
   currentPopupHabit = h;
   const popupIcon = document.getElementById('popup-icon');
   if (popupIcon) popupIcon.innerHTML = `<i data-lucide="${h.icon}"></i>`;
@@ -7261,6 +7784,13 @@ function renderPopupBody(h) {
 function confirmPopup() {
   const h = currentPopupHabit;
   if (!h) return;
+  const date = document.getElementById('entry-date')?.value || todayStr();
+  const sequenceBlock = getJournalSequenceBlock(date);
+  if (sequenceBlock) {
+    closePopup();
+    toast(`Isi jurnal tanggal ${fmtDate(sequenceBlock.missingDate)} terlebih dahulu.`, 'warning');
+    return;
+  }
   const body = document.getElementById('popup-body');
   if (h.type==='dual') {
     const sections = body.querySelectorAll('.popup-section');
@@ -7297,6 +7827,11 @@ async function autoSaveDraft(habitKey) {
   const dateEl = document.getElementById('entry-date');
   const date = dateEl ? dateEl.value : todayStr();
   if (!date) return;
+  const sequenceBlock = getJournalSequenceBlock(date);
+  if (sequenceBlock) {
+    toast(`Isi jurnal tanggal ${fmtDate(sequenceBlock.missingDate)} terlebih dahulu.`, 'warning');
+    return;
+  }
   
   const key = currentStudent.id + '_' + date;
   
@@ -7309,6 +7844,7 @@ async function autoSaveDraft(habitKey) {
   }
   cachedJournals[key].updatedAt = new Date().toISOString();
   saveLocalCache();
+  await renderMonthlyRecap(date, cachedJournals);
   console.log('\uD83D\uDCBE Auto-saved \'' + habitKey + '\' ke localStorage');
   
   // Save ke Firebase menggunakan update() - HANYA update field yang berubah
@@ -7351,6 +7887,11 @@ function closePopup() {
 function doSaveJournal() {
   const date = document.getElementById('entry-date').value;
   if (!date) { toast('Pilih tanggal terlebih dahulu','error'); return; }
+  const sequenceBlock = getJournalSequenceBlock(date);
+  if (sequenceBlock) {
+    toast(`Isi jurnal tanggal ${fmtDate(sequenceBlock.missingDate)} terlebih dahulu.`, 'warning');
+    return;
+  }
   const filled = HABITS.filter(h=>entryData[h.key]!==undefined).length;
   if (filled === 0) { toast('Belum ada kebiasaan yang diisi','error'); return; }
   
@@ -7378,6 +7919,12 @@ function closeHonestyModal() {
 
 async function confirmSaveJournal() {
   const date = document.getElementById('entry-date').value;
+  const sequenceBlock = getJournalSequenceBlock(date);
+  if (sequenceBlock) {
+    closeHonestyModal();
+    toast(`Isi jurnal tanggal ${fmtDate(sequenceBlock.missingDate)} terlebih dahulu.`, 'warning');
+    return;
+  }
   const studentId = currentStudent.id;
   console.log(`💾 Student ${studentId} saving journal untuk ${date}...`);
   console.log(`📊 Data yang disimpan:`, Object.keys(entryData).length, 'kebiasaan');
@@ -7676,8 +8223,8 @@ function switchTeacherTab(tab) {
   document.getElementById('tab-students').classList.toggle('hidden', tab!=='students');
   document.getElementById('tab-recap').classList.toggle('hidden', tab!=='recap');
   document.getElementById('tab-settings').classList.toggle('hidden', tab!=='settings');
-  document.getElementById('tab-overview').style.display = tab==='overview' ? 'block' : 'none';
   document.getElementById('tab-students').style.display = tab==='students' ? 'block' : 'none';
+  document.getElementById('tab-overview').style.display = tab==='overview' ? 'block' : 'none';
   document.getElementById('tab-recap').style.display = tab==='recap' ? 'block' : 'none';
   document.getElementById('tab-settings').style.display = tab==='settings' ? 'block' : 'none';
   const selectedTab = document.getElementById('tab-' + tab);
@@ -7694,6 +8241,7 @@ function switchTeacherTab(tab) {
     if (tab==='students') {
       const searchInput = document.getElementById('student-search');
       renderStudents(searchInput ? searchInput.value : '');
+      renderPasswordChangeRequests();
     }
     if (tab==='recap') { populateRecapFilter().then(()=>filterRecap()); }
     if (tab==='settings') {
@@ -7781,6 +8329,115 @@ async function renderOverview() {
 // ============================================================
 // DATA SISWA (SEARCH/ADD/EDIT/DELETE)
 // ============================================================
+function renderPasswordChangeRequests() {
+  const container = document.getElementById('password-change-requests');
+  if (!container) return;
+  container.replaceChildren();
+
+  const requests = Object.entries(cachedPasswordChangeRequests)
+    .filter(([, request]) => request && typeof request === 'object' && request.requestedAt)
+    .sort((a, b) => (b[1].requestedAt || 0) - (a[1].requestedAt || 0));
+  if (!requests.length) {
+    const empty = document.createElement('p');
+    empty.textContent = 'Belum ada permintaan ganti password.';
+    empty.style.cssText = 'margin:0;text-align:center;color:#64748b;padding:10px';
+    container.appendChild(empty);
+    return;
+  }
+
+  requests.forEach(([studentId, request]) => {
+    const student = cachedStudents.find(item => item.id === studentId);
+    const card = document.createElement('div');
+    card.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px;margin-bottom:8px;border:1px solid #cbd5e1;border-radius:12px;background:#fff;flex-wrap:wrap';
+    const details = document.createElement('div');
+    const name = document.createElement('strong');
+    name.textContent = student ? student.name : 'Siswa tidak ditemukan';
+    const description = document.createElement('div');
+    description.style.cssText = 'font-size:.78rem;color:#64748b;margin-top:3px';
+    const time = request.requestedAt
+      ? new Date(request.requestedAt).toLocaleString('id-ID')
+      : '';
+    description.textContent = `Kelas ${student ? student.kelas : '-'} · Permintaan: ${time}`;
+    const state = document.createElement('div');
+    state.style.cssText = 'font-size:.82rem;font-weight:700;margin-top:4px';
+    const requestStatus = request.status || 'pending';
+    if (requestStatus === 'pending') {
+      state.textContent = 'Menunggu persetujuan guru';
+      state.style.color = '#b45309';
+    } else if (requestStatus === 'approved' && request.consumedAt) {
+      state.textContent = 'Password sudah diganti';
+      state.style.color = '#047857';
+    } else if (requestStatus === 'approved') {
+      state.textContent = 'Disetujui · menunggu siswa mengganti';
+      state.style.color = '#047857';
+    } else if (requestStatus === 'rejected') {
+      state.textContent = 'Tidak disetujui';
+      state.style.color = '#b91c1c';
+    } else {
+      state.textContent = 'Belum diproses';
+      state.style.color = '#64748b';
+    }
+    details.append(name, description, state);
+    const actions = document.createElement('div');
+    actions.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
+
+    const addAction = (label, action, className) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = className;
+      button.textContent = label;
+      button.dataset.action = action;
+      button.dataset.studentId = studentId;
+      actions.appendChild(button);
+    };
+    if (requestStatus === 'pending') {
+      addAction('Setujui', 'approve', 'btn-game btn-game-green');
+      addAction('Tolak', 'reject', 'btn-game btn-game-red');
+    } else if (request.status === 'rejected' || request.consumedAt) {
+      addAction('Tutup Permintaan', 'close', 'btn-game btn-game-cyan');
+    } else if (requestStatus === 'approved') {
+      addAction('Cabut Persetujuan', 'close', 'btn-game btn-game-red');
+    }
+    card.append(details, actions);
+    container.appendChild(card);
+  });
+}
+
+async function handlePasswordRequestAction(action, studentId) {
+  if (
+    !studentId ||
+    currentUserRole !== 'teacher' ||
+    !window.firebaseAuth.currentUser ||
+    window.firebaseAuth.currentUser.uid !== TEACHER_AUTH_UID
+  ) {
+    toast('Sesi guru tidak aktif. Masuk kembali ke panel guru.', 'error');
+    return;
+  }
+  try {
+    const { ref, update, remove, serverTimestamp } = window.rtdbModules;
+    const requestRef = ref(window.rtdb, 'passwordChangeRequests/' + studentId);
+    if (action === 'approve') {
+      await update(requestRef, {
+        status: 'approved',
+        approvedAt: serverTimestamp()
+      });
+      toast('Permintaan siswa disetujui.', 'success');
+    } else if (action === 'reject') {
+      await update(requestRef, {
+        status: 'rejected',
+        rejectedAt: serverTimestamp()
+      });
+      toast('Permintaan siswa ditolak.', 'info');
+    } else if (action === 'close') {
+      await remove(requestRef);
+      toast('Permintaan ditutup. Siswa dapat mengajukan permintaan baru.', 'success');
+    }
+  } catch (error) {
+    console.error('Failed to process student password request:', error);
+    toast('Gagal memproses permintaan password. Periksa koneksi dan Firebase Rules.', 'error');
+  }
+}
+
 async function renderStudents(q) {
   const students = await getStudents();
   const journals = await getJournals();
@@ -7850,7 +8507,11 @@ function openAddModal() {
   document.getElementById('modal-student-class').value = '';
   document.getElementById('modal-student-number').value = '';
   document.getElementById('modal-student-pin').value = '';
+  document.getElementById('student-account-password-group').hidden = false;
+  document.getElementById('student-password-change-note').hidden = true;
   document.getElementById('modal-student-pin').required = true;
+  document.getElementById('modal-student-pin-label').textContent =
+    'Password Akun Siswa (minimal 6 karakter)';
   document.getElementById('modal-student-pin').placeholder = 'Buat password minimal 6 karakter';
   document.getElementById('modal-student').classList.add('active');
 }
@@ -7866,8 +8527,9 @@ async function openEditModal(id) {
   document.getElementById('modal-student-number').value = s.absen;
   const passwordInput = document.getElementById('modal-student-pin');
   passwordInput.value = '';
-  passwordInput.required = true;
-  passwordInput.placeholder = 'Masukkan password akun siswa untuk memasangkan akun';
+  passwordInput.required = false;
+  document.getElementById('student-account-password-group').hidden = true;
+  document.getElementById('student-password-change-note').hidden = false;
   document.getElementById('modal-student').classList.add('active');
 }
 
@@ -7885,8 +8547,11 @@ async function saveStudentModal() {
   if (!name) { toast('Nama tidak boleh kosong','error'); return; }
   if (!kelas) { toast('Kelas tidak boleh kosong','error'); return; }
   if (!absen) { toast('No. absen tidak valid','error'); return; }
-  if (password.length < 6) {
-    toast('Password akun siswa minimal 6 karakter untuk verifikasi dan pemasangan akun','error');
+  if ((!id && password.length < 6) || (password && password.length < 6)) {
+    toast(id
+      ? 'Password baru minimal 6 karakter.'
+      : 'Password akun siswa minimal 6 karakter untuk membuat akun.',
+    'error');
     return;
   }
   
@@ -7924,7 +8589,10 @@ async function saveStudentModal() {
     
     const synced = await saveStudentRecord(savedStudent, password);
     if (synced) {
-      toast(id ? 'Data pahlawan berhasil diubah' : 'Akun dan data siswa berhasil dibuat', 'success');
+      toast(id
+        ? (password ? 'Data siswa dan password berhasil diubah' : 'Data pahlawan berhasil diubah')
+        : 'Akun dan data siswa berhasil dibuat',
+      'success');
       closeStudentModal();
       renderStudents(document.getElementById('student-search').value);
       populateSelect();
@@ -8478,6 +9146,9 @@ async function generatePDF() {
 // Real-time listener unsubscribers
 let unsubStudents = null;
 let unsubJournals = null;
+let unsubPasswordRequests = null;
+let unsubStudentPasswordRequest = null;
+let cachedPasswordChangeRequests = {};
 let syncStatusTimeout = null;
 
 // Update sync status indicator
@@ -8522,6 +9193,7 @@ async function setupRealTimeListeners() {
     // Unsubscribe dari listener lama jika ada
     if (unsubStudents) unsubStudents();
     if (unsubJournals) unsubJournals();
+    if (unsubPasswordRequests) unsubPasswordRequests();
     
     console.log('🔄 Memasang real-time listeners untuk students...');
     unsubStudents = onValue(ref(window.rtdb, 'students'), (snap) => {
@@ -8530,10 +9202,24 @@ async function setupRealTimeListeners() {
       cachedStudents = newStudents;
       recapFiltersReady = false;
       saveLocalCache();
+      renderPasswordChangeRequests();
       scheduleRefreshActiveViews();
     }, (error) => {
       console.error('❌ Error listening to students:', error);
     });
+
+    console.log('🔄 Memasang listener permintaan ganti password...');
+    unsubPasswordRequests = onValue(
+      ref(window.rtdb, 'passwordChangeRequests'),
+      snapshot => {
+        cachedPasswordChangeRequests = snapshot.val() || {};
+        renderPasswordChangeRequests();
+      },
+      error => {
+        console.error('❌ Error listening to password change requests:', error);
+        toast('Gagal memuat permintaan ganti password siswa.', 'error');
+      }
+    );
     
     console.log('🔄 Memasang real-time listeners untuk journals...');
     unsubJournals = onValue(ref(window.rtdb, 'journals'), (snap) => {
@@ -8594,8 +9280,11 @@ async function setupRealTimeListeners() {
 function stopRealTimeListeners() {
   if (unsubStudents) unsubStudents();
   if (unsubJournals) unsubJournals();
+  if (unsubPasswordRequests) unsubPasswordRequests();
   unsubStudents = null;
   unsubJournals = null;
+  unsubPasswordRequests = null;
+  cachedPasswordChangeRequests = {};
 }
 
 // Force sync data dari Firebase
@@ -8716,6 +9405,7 @@ async function init() {
     setLoadProgress(15, 'Membuka gerbang data lokal...');
     loadLocalCache();
     setupEventListeners();
+    void populateSelect(false);
     
     setLoadProgress(35, 'Menghubungkan ke Portal cloud...');
     
@@ -8729,6 +9419,8 @@ async function init() {
     if (!window.rtdb || !window.firebaseAuth) {
       throw new Error('Firebase SDK gagal dimuat');
     }
+
+    void populateSelect();
 
     const sessionReady = await ensureFirebaseSession();
     if (!sessionReady) {
@@ -8759,8 +9451,6 @@ async function init() {
       }
     }, 60000);
 
-    await populateSelect();
-    
     // Setup auto-sync interval - re-sync setiap 30 detik untuk memastikan data tetap sinkron
     setInterval(async () => {
       if (currentUserRole === 'teacher' && window.rtdb && document.hidden === false) {
@@ -8804,7 +9494,7 @@ async function init() {
             );
             if (studentSnapshot.exists()) {
               currentUserRole = 'student';
-              currentStudent = { id: studentId, ...studentSnapshot.val() };
+              currentStudent = { id: studentId, ...studentSnapshot.val(), authUid: user.uid };
               cachedStudents = [currentStudent];
               await openJournalPage();
               return;
@@ -8866,8 +9556,40 @@ function setupEventListeners() {
 
   // Journal page
   const btnJournalLogout = document.getElementById('btn-journal-logout');
+  const btnStudentChangePassword = document.getElementById('btn-student-change-password');
+  const btnStudentPasswordCancel = document.getElementById('btn-student-password-cancel');
+  const btnStudentPasswordRequest = document.getElementById('btn-student-password-request');
+  const btnStudentPasswordSave = document.getElementById('btn-student-password-save');
+  const studentPasswordModal = document.getElementById('modal-student-password');
+  const missedJournalModal = document.getElementById('modal-missed-journal');
+  const btnMissedJournalFill = document.getElementById('btn-missed-journal-fill');
   const entryDate = document.getElementById('entry-date');
   const btnSaveJournal = document.getElementById('btn-save-journal');
+
+  if (btnStudentChangePassword) btnStudentChangePassword.addEventListener('click', openStudentPasswordModal);
+  if (btnStudentPasswordCancel) btnStudentPasswordCancel.addEventListener('click', closeStudentPasswordModal);
+  if (btnStudentPasswordRequest) btnStudentPasswordRequest.addEventListener('click', requestStudentPasswordApproval);
+  if (btnStudentPasswordSave) btnStudentPasswordSave.addEventListener('click', changeStudentPassword);
+  if (studentPasswordModal) {
+    studentPasswordModal.addEventListener('click', event => {
+      if (event.target === studentPasswordModal) closeStudentPasswordModal();
+    });
+  }
+  if (btnMissedJournalFill) btnMissedJournalFill.addEventListener('click', closeMissedJournalNotice);
+  if (missedJournalModal) {
+    missedJournalModal.addEventListener('click', event => {
+      if (event.target === missedJournalModal) closeMissedJournalNotice();
+    });
+  }
+
+  const passwordRequestList = document.getElementById('password-change-requests');
+  if (passwordRequestList) {
+    passwordRequestList.addEventListener('click', event => {
+      const button = event.target.closest('button[data-action][data-student-id]');
+      if (!button) return;
+      void handlePasswordRequestAction(button.dataset.action, button.dataset.studentId);
+    });
+  }
   
   if (btnJournalLogout) {
     btnJournalLogout.addEventListener('click', async ()=>{
